@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(bun install *)",
+      "Bash(npm install *)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"tsx\")",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npx prisma *)",
+      "Bash(pg_isready)",
+      "Bash(psql -U postgres -l)",
+      "Bash(psql -l)"
+    ]
+  }
+}
