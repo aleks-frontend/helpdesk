@@ -13,7 +13,20 @@
       "Bash(npx prisma *)",
       "Bash(pg_isready)",
       "Bash(psql -U postgres -l)",
-      "Bash(psql -l)"
+      "Bash(psql -l)",
+      "Bash(curl -s http://localhost:3000/api/auth/ok)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(pkill -f \"tsx --watch src/index.ts\")",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s -c /tmp/helpdesk-cookies.txt -X POST http://localhost:3000/api/auth/sign-up/email -H 'Content-Type: application/json' -d '{\"email\":\"alex@helpdesk.dev\",\"password\":\"hunter2hunter2\",\"name\":\"Alex\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -b /tmp/helpdesk-cookies.txt -X POST http://localhost:3000/api/auth/sign-out -H 'Content-Type: application/json')",
+      "Bash(curl -s -c /tmp/helpdesk-cookies2.txt -X POST http://localhost:3000/api/auth/sign-in/email -H 'Content-Type: application/json' -d '{\"email\":\"alex@helpdesk.dev\",\"password\":\"hunter2hunter2\"}')",
+      "Bash(curl -s -b /tmp/helpdesk-cookies2.txt http://localhost:3000/api/auth/get-session)",
+      "Bash(curl -sv -X POST http://localhost:3000/api/auth/sign-up/email -H 'Content-Type: application/json' -d '{\"email\":\"alex2@helpdesk.dev\",\"password\":\"hunter2hunter2\",\"name\":\"Alex\"}')"
     ]
   }
 }
