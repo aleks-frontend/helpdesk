@@ -1,25 +1,31 @@
-import { useState, type FormEvent } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useNavigate } from 'react-router'
 import { authClient } from '../lib/auth-client'
 
+const schema = z.object({
+  email: z.email('Enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+type FormValues = z.infer<typeof schema>
+
 export default function LoginPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, setIsPending] = useState(false)
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setIsPending(true)
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema), mode: 'onTouched' })
 
-    const { error: authError } = await authClient.signIn.email({ email, password })
-
-    setIsPending(false)
+  async function onSubmit(data: FormValues) {
+    const { error: authError } = await authClient.signIn.email(data)
 
     if (authError) {
-      setError(authError.message ?? 'Invalid email or password.')
+      setError('root', { message: authError.message ?? 'Invalid email or password.' })
       return
     }
 
@@ -31,13 +37,13 @@ export default function LoginPage() {
       <div className="w-full max-w-sm bg-white rounded-lg shadow p-8">
         <h1 className="text-2xl font-bold mb-6">Sign in to Helpdesk</h1>
 
-        {error && (
+        {errors.root && (
           <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
-            {error}
+            {errors.root.message}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -45,12 +51,13 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
-              required
               autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {...register('email')}
+              className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
             />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -60,20 +67,21 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
-              required
               autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {...register('password')}
+              className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
             />
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isSubmitting}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </div>
