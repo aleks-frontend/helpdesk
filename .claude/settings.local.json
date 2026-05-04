@@ -33,7 +33,17 @@
       "Bash(/Library/PostgreSQL/18/bin/psql *)",
       "Bash(PGPASSWORD=160598710Ag /Library/PostgreSQL/18/bin/psql *)",
       "Bash(npx tsc *)",
-      "Bash(node -e \"const {defineConfig} = require\\('./node_modules/prisma/dist/config/index.js'\\); console.log\\(Object.keys\\(defineConfig.toString\\(\\)\\)\\)\")"
+      "Bash(node -e \"const {defineConfig} = require\\('./node_modules/prisma/dist/config/index.js'\\); console.log\\(Object.keys\\(defineConfig.toString\\(\\)\\)\\)\")",
+      "Bash(/Users/aleksandargojkovic/Documents/GitHub/helpdesk/client/node_modules/.bin/tsc *)",
+      "Bash(/Users/aleksandargojkovic/Documents/GitHub/helpdesk/node_modules/.bin/tsc *)",
+      "Bash(npx vite *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(kill 61612 9764)",
+      "Bash(pkill -f \"concurrently\")",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill *)",
+      "Bash(lsof -ti:5173)",
+      "Bash(curl -s http://localhost:5173)"
     ]
   }
 }
