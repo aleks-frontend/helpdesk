@@ -43,7 +43,10 @@
       "Bash(lsof -ti:3000)",
       "Bash(xargs kill *)",
       "Bash(lsof -ti:5173)",
-      "Bash(curl -s http://localhost:5173)"
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(git *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/login)"
     ]
   }
 }
