@@ -15,7 +15,8 @@
     "@prisma/client": "^7.8.0",
     "better-auth": "^1.6.9",
     "dotenv": "^17.4.2",
-    "express": "^5.0.0"
+    "express": "^5.0.0",
+    "express-rate-limit": "^8.5.1"
   },
   "devDependencies": {
     "@types/bun": "latest",

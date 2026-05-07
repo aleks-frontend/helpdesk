@@ -1,5 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
+import type { ErrorRequestHandler } from 'express'
+import { rateLimit } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth.js'
 import { requireAuth } from './middleware/require-auth.js'
@@ -7,11 +9,19 @@ import { requireAuth } from './middleware/require-auth.js'
 const app = express()
 const port = process.env.PORT ?? 3000
 
-app.all('/api/auth/{*any}', (req, res, next) => {
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again later.' },
+})
+
+app.all('/api/auth/{*any}', authRateLimit, (req, res, next) => {
   toNodeHandler(auth)(req, res).catch(next)
 })
 
-app.use(express.json())
+app.use(express.json({ limit: '50kb' }))
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
@@ -20,6 +30,12 @@ app.get('/api/health', (_req, res) => {
 app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user, session: req.session })
 })
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error(err)
+  res.status(500).json({ error: 'Internal server error' })
+}
+app.use(errorHandler)
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)

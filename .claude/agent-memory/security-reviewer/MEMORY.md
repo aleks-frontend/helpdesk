@@ -1,0 +1,2 @@
+- [Auth & RBAC Architecture](project_auth_rbac_architecture.md) — auth middleware, role enforcement gaps, and key security findings from first audit
+- [High-Risk Areas for Future Scrutiny](project_high_risk_areas.md) — areas that need server-side enforcement as the app grows

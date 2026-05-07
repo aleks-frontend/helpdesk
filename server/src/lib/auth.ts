@@ -5,7 +5,16 @@ import { prisma } from "./prisma.js"
 
 export const auth = betterAuth({
   basePath: "/api/auth",
-  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") ?? [],
+  trustedOrigins: (() => {
+    const raw = process.env.TRUSTED_ORIGINS
+    if (!raw) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('TRUSTED_ORIGINS environment variable must be set in production')
+      }
+      return ['http://localhost:5173']
+    }
+    return raw.split(',')
+  })(),
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
