@@ -19,7 +19,7 @@ const serverEnv = {
   BETTER_AUTH_URL: requireEnv('BETTER_AUTH_URL'),
   TRUSTED_ORIGINS: requireEnv('TRUSTED_ORIGINS'),
   NODE_ENV: 'test',
-  PORT: '3000',
+  PORT: '3001',
 }
 
 export default defineConfig({
@@ -31,7 +31,7 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5174',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -43,19 +43,20 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run dev --workspace=server',
-      port: 3000,
+      command: 'npx tsx src/index.ts',
+      port: 3001,
       timeout: 30_000,
       reuseExistingServer: false,
-      cwd: path.resolve(__dirname, '..'),
+      cwd: path.resolve(__dirname, '../server'),
       env: serverEnv,
     },
     {
-      command: 'npm run dev --workspace=client',
-      port: 5173,
+      command: 'npx vite --port 5174',
+      port: 5174,
       timeout: 30_000,
       reuseExistingServer: false,
-      cwd: path.resolve(__dirname, '..'),
+      cwd: path.resolve(__dirname, '../client'),
+      env: { API_SERVER_URL: 'http://localhost:3001' },
     },
   ],
 })
