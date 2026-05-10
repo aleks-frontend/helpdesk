@@ -16,7 +16,10 @@ export default async function globalSetup() {
 
   await ensureTestDatabase(testDbUrl)
   runMigrations(testDbUrl)
+  runSeed(testDbUrl)
 }
+
+
 
 async function ensureTestDatabase(testDbUrl: string) {
   const url = new URL(testDbUrl)
@@ -43,6 +46,15 @@ async function ensureTestDatabase(testDbUrl: string) {
 function runMigrations(testDbUrl: string) {
   console.log('Running migrations on test database...')
   execSync('npx prisma migrate deploy', {
+    cwd: path.resolve(__dirname, '../server'),
+    env: { ...process.env, DATABASE_URL: testDbUrl },
+    stdio: 'inherit',
+  })
+}
+
+function runSeed(testDbUrl: string) {
+  console.log('Seeding test database...')
+  execSync('npx tsx prisma/seed.ts', {
     cwd: path.resolve(__dirname, '../server'),
     env: { ...process.env, DATABASE_URL: testDbUrl },
     stdio: 'inherit',
