@@ -8,7 +8,7 @@ AI-powered helpdesk that receives student support emails, auto-generates persona
 
 ## Commands
 
-This is an npm monorepo with `client` and `server` workspaces.
+This is an npm monorepo with `client`, `server`, and `e2e` workspaces.
 
 ```bash
 # Run both client and server in dev mode
@@ -25,15 +25,20 @@ cd client && npm run dev
 
 # Seed the admin user (requires ADMIN_EMAIL and ADMIN_PASSWORD in server/.env)
 cd server && bun prisma/seed.ts
-```
 
-No test runner is configured yet. When adding tests, use `node --test` or install a test runner.
+# Run e2e tests (stop dev server first — tests use ports 3001 and 5174)
+npm run test:e2e
+
+# Run e2e tests with Playwright UI
+npm run test:e2e:ui
+```
 
 ## Architecture
 
 **Monorepo layout:**
 - `client/` — React 19 + TypeScript SPA, Vite 6, Tailwind v4, React Router v7
 - `server/` — Express 5 on Bun runtime, TypeScript
+- `e2e/` — Playwright end-to-end tests (Chromium only, single worker)
 
 **Client → Server communication:** Vite dev server proxies `/api/*` to `http://localhost:3000`, so all API calls from the client use relative `/api/` paths.
 
@@ -118,3 +123,13 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 - Prisma schema has no `datasourceUrl` — connection string is passed via `PrismaPg` adapter constructor using `DATABASE_URL` env var.
 - Better Auth is mounted with `app.all('/api/auth/{*any}', ...)` before `app.use(express.json())`.
 - shadcn/ui uses the **base-nova** style; components live in `client/src/components/ui/`. Installed: button, card, input, label.
+- Rate limiting (`express-rate-limit`) on auth routes is enabled only when `NODE_ENV=production`.
+- Vite proxy target is configurable via `API_SERVER_URL` env var (defaults to `http://localhost:3000`).
+
+## E2e testing
+
+- Config: `e2e/playwright.config.ts`; env vars: `e2e/.env.test` (gitignored — copy from `e2e/.env.test.example`)
+- Test database: `helpdesk_test` (separate from dev `helpdesk`)
+- `globalSetup` creates the DB if missing, runs `prisma migrate deploy`, and seeds the admin user
+- Tests run the server on port **3001** and Vite on port **5174** — dev server must be stopped first
+- Add test files to `e2e/tests/` as `*.spec.ts`

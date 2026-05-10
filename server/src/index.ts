@@ -9,13 +9,15 @@ import { requireAuth } from './middleware/require-auth.js'
 const app = express()
 const port = process.env.PORT ?? 3000
 
-const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again later.' },
-})
+const authRateLimit = process.env.NODE_ENV === 'production'
+  ? rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 20,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: 'Too many login attempts, please try again later.' },
+    })
+  : (_req: express.Request, _res: express.Response, next: express.NextFunction) => next()
 
 app.all('/api/auth/{*any}', authRateLimit, (req, res, next) => {
   toNodeHandler(auth)(req, res).catch(next)
