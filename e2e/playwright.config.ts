@@ -25,6 +25,7 @@ const serverEnv = {
 export default defineConfig({
   testDir: './tests',
   globalSetup: './global-setup.ts',
+  globalTeardown: './global-teardown.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
