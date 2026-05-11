@@ -33,6 +33,8 @@ npm run test:e2e
 npm run test:e2e:ui
 ```
 
+Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of the test infrastructure, selector strategy, auth fixture patterns, and coverage checklists.
+
 ## Architecture
 
 **Monorepo layout:**
@@ -125,11 +127,3 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 - shadcn/ui uses the **base-nova** style; components live in `client/src/components/ui/`. Installed: button, card, input, label.
 - Rate limiting (`express-rate-limit`) on auth routes is enabled only when `NODE_ENV=production`.
 - Vite proxy target is configurable via `API_SERVER_URL` env var (defaults to `http://localhost:3000`).
-
-## E2e testing
-
-- Config: `e2e/playwright.config.ts`; env vars: `e2e/.env.test` (gitignored — copy from `e2e/.env.test.example`)
-- Test database: `helpdesk_test` (separate from dev `helpdesk`)
-- `globalSetup` creates the DB if missing, runs `prisma migrate deploy`, and seeds the admin user
-- Tests run the server on port **3001** and Vite on port **5174** — dev server must be stopped first
-- Add test files to `e2e/tests/` as `*.spec.ts`
