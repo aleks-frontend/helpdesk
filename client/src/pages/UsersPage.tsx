@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import api from '@/lib/api'
 
 interface User {
@@ -10,6 +11,31 @@ interface User {
   email: string
   role: 'admin' | 'agent'
   createdAt: string
+}
+
+function UserTableSkeleton() {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Joined</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+            <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
 }
 
 export default function UsersPage() {
@@ -25,7 +51,7 @@ export default function UsersPage() {
           <CardTitle>Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+          {isLoading && <UserTableSkeleton />}
           {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
           {!isLoading && !error && (
             <Table>
