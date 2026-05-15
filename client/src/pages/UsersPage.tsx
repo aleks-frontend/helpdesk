@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import api from '@/lib/api'
 
 interface User {
   id: string
@@ -12,20 +13,10 @@ interface User {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch('/api/users')
-      .then((r) => r.json())
-      .then((data: { users?: User[]; error?: string }) => {
-        if (data.error) throw new Error(data.error)
-        setUsers(data.users ?? [])
-      })
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
+  const { data: users = [], isLoading, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => api.get<{ users: User[] }>('/users').then((r) => r.data.users),
+  })
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -34,9 +25,9 @@ export default function UsersPage() {
           <CardTitle>Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {!loading && !error && (
+          {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+          {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
+          {!isLoading && !error && (
             <Table>
               <TableHeader>
                 <TableRow>

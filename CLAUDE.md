@@ -118,6 +118,8 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 
 ## Key Conventions
 
+- All client-side HTTP requests use **axios** via the shared instance at `client/src/lib/api.ts` (`baseURL: '/api'`). Never use `fetch` directly.
+- All server state (data from `/api/*`) is fetched and cached with **TanStack Query** (`@tanstack/react-query`). Use `useQuery` for reads and `useMutation` for writes. The `QueryClientProvider` is set up in `main.tsx`.
 - Server runs on port 3000 (`process.env.PORT` overrides).
 - Express is v5 (async error handling works natively; no need for `express-async-errors`).
 - Tailwind v4 is configured via the Vite plugin (`@tailwindcss/vite`), not `postcss.config.js`. CSS entry point is `client/src/index.css` with a single `@import "tailwindcss"`.
