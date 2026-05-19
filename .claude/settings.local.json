@@ -57,7 +57,8 @@
       "Bash(cp /Users/aleksandargojkovic/Documents/GitHub/helpdesk/.claude/agents/playwright-e2e-writer.md /Users/aleksandargojkovic/Documents/GitHub/helpdesk/.claude/agents/e2e-test-writer.md)",
       "Bash(rm /Users/aleksandargojkovic/Documents/GitHub/helpdesk/.claude/agents/playwright-e2e-writer.md)",
       "Bash(curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Dest: empty' -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')",
-      "Bash(curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H 'Content-Type: application/json' -H 'Origin: http://localhost:5174' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Dest: empty' -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H 'Content-Type: application/json' -H 'Origin: http://localhost:5174' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Dest: empty' -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')",
+      "Bash(npx vitest *)"
     ]
   }
 }

@@ -26,12 +26,20 @@ cd client && npm run dev
 # Seed the admin user (requires ADMIN_EMAIL and ADMIN_PASSWORD in server/.env)
 cd server && bun prisma/seed.ts
 
+# Run component (unit) tests
+cd client && npm test
+
+# Run component tests in watch mode
+cd client && npm run test:watch
+
 # Run e2e tests (stop dev server first — tests use ports 3001 and 5174)
 npm run test:e2e
 
 # Run e2e tests with Playwright UI
 npm run test:e2e:ui
 ```
+
+Use the **`component-unit-tester`** agent to write component unit tests. It has full knowledge of the test infrastructure, shared utilities, mocking patterns, and coverage conventions for this project.
 
 Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of the test infrastructure, selector strategy, auth fixture patterns, and coverage checklists.
 
