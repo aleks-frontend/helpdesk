@@ -5,9 +5,7 @@ import { rateLimit } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth.js'
 import { requireAuth } from './middleware/require-auth.js'
-import { requireRole } from './middleware/require-role.js'
-import { prisma } from './lib/prisma.js'
-import { Role } from './generated/prisma/enums.js'
+import { usersRouter } from './routes/users.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -36,13 +34,7 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user, session: req.session })
 })
 
-app.get('/api/users', requireAuth, requireRole(Role.admin), async (_req, res) => {
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
-    orderBy: { createdAt: 'asc' },
-  })
-  res.json({ users })
-})
+app.use('/api/users', usersRouter)
 
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {

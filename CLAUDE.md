@@ -46,6 +46,7 @@ Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of
 ## Architecture
 
 **Monorepo layout:**
+- `core/` — shared Zod schemas and TypeScript types imported by both client and server
 - `client/` — React 19 + TypeScript SPA, Vite 6, Tailwind v4, React Router v7
 - `server/` — Express 5 on Bun runtime, TypeScript
 - `e2e/` — Playwright end-to-end tests (Chromium only, single worker)
@@ -107,6 +108,15 @@ client/src/
 
 **Role access pattern:** Better Auth doesn't type `additionalFields` on the client by default. Access role with `(session?.user as { role?: string } | undefined)?.role`.
 
+## Core structure
+
+```
+core/src/
+├── index.ts              # Re-exports everything
+└── schemas/
+    └── users.ts          # createUserSchema, CreateUserInput
+```
+
 ## Server structure
 
 ```
@@ -117,6 +127,8 @@ server/src/
 │   └── prisma.ts               # PrismaClient singleton
 ├── middleware/
 │   └── require-auth.ts         # Express middleware; attaches req.user + req.session
+├── routes/
+│   └── users.ts                # GET /api/users, POST /api/users (admin only)
 └── generated/prisma/           # Prisma-generated client (do not edit)
 ```
 
@@ -134,6 +146,8 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 - Routing is client-side via React Router v7's `<BrowserRouter>`.
 - Prisma schema has no `datasourceUrl` — connection string is passed via `PrismaPg` adapter constructor using `DATABASE_URL` env var.
 - Better Auth is mounted with `app.all('/api/auth/{*any}', ...)` before `app.use(express.json())`.
-- shadcn/ui uses the **base-nova** style; components live in `client/src/components/ui/`. Installed: button, card, input, label.
+- shadcn/ui uses the **base-nova** style; components live in `client/src/components/ui/`. Installed: button, card, input, label, skeleton, table, badge, dialog.
 - Rate limiting (`express-rate-limit`) on auth routes is enabled only when `NODE_ENV=production`.
 - Vite proxy target is configurable via `API_SERVER_URL` env var (defaults to `http://localhost:3000`).
+- **Zod** is used for all data validation — on the server (request body parsing via `z.object(...).safeParse(req.body)`) and on the client (form schemas with `react-hook-form` + `@hookform/resolvers/zod`). Never write manual type/format checks when Zod can handle it.
+- **Shared schemas live in `core/`** — any Zod schema used by both client and server must be defined in `core/src/schemas/` and exported from `core/src/index.ts`. Both packages import from `'core'`. Never duplicate a schema across client and server.

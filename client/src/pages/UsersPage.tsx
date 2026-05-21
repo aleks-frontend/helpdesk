@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { PlusIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { CreateUserDialog } from '@/components/CreateUserDialog'
+import { UsersTable } from '@/components/UsersTable'
 import api from '@/lib/api'
 
 interface User {
@@ -13,32 +15,9 @@ interface User {
   createdAt: string
 }
 
-function UserTableSkeleton() {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Joined</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <TableRow key={i}>
-            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-            <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
-
 export default function UsersPage() {
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: () => api.get<{ users: User[] }>('/users').then((r) => r.data.users),
@@ -47,42 +26,19 @@ export default function UsersPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Users</CardTitle>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <PlusIcon />
+            Create user
+          </Button>
         </CardHeader>
         <CardContent>
-          {isLoading && <UserTableSkeleton />}
-          {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
-          {!isLoading && !error && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium text-foreground">{user.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.role === 'admin' ? 'primary' : 'default'}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <UsersTable users={users} isLoading={isLoading} error={error as Error | null} />
         </CardContent>
       </Card>
+
+      <CreateUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   )
 }
