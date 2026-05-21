@@ -60,22 +60,24 @@ export function CreateUserDialog({ open, onOpenChange }: Props) {
         </DialogHeader>
         <form
           id="create-user-form"
-          onSubmit={handleSubmit((data) => createUser.mutate(data))}
+          onSubmit={handleSubmit(async (data) => {
+            try { await createUser.mutateAsync(data) } catch { /* handled by onError */ }
+          })}
           className="flex flex-col gap-4"
         >
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="Jane Smith" {...register('name')} />
+            <Input id="name" placeholder="Jane Smith" aria-invalid={!!errors.name} {...register('name')} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="jane@example.com" {...register('email')} />
+            <Input id="email" type="email" placeholder="jane@example.com" aria-invalid={!!errors.email} {...register('email')} />
             {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
+            <Input id="password" type="password" placeholder="••••••••" aria-invalid={!!errors.password} {...register('password')} />
             {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
           </div>
           {errors.root && <p className="text-xs text-destructive">{errors.root.message}</p>}

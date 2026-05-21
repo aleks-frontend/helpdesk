@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import UsersPage from './UsersPage'
 import api from '@/lib/api'
 import { renderWrapper as wrapper } from '@/test/render-with-query'
@@ -112,5 +113,164 @@ describe('UsersPage', () => {
 
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
     expect(mockGet).toHaveBeenCalledWith('/users')
+  })
+
+  describe('CreateUserDialog', () => {
+    beforeEach(() => {
+      mockGet.mockResolvedValue({ data: { users: [] } })
+    })
+
+    it('dialog appears when "Create user" button is clicked', async () => {
+      const user = userEvent.setup()
+      render(<UsersPage />, { wrapper })
+
+      // Wait for the page to load
+      await waitFor(() =>
+        expect(document.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+      )
+
+      // Dialog should not be visible initially
+      expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+
+      // Click the "Create user" button
+      const createButton = screen.getByRole('button', { name: /Create user/i })
+      await user.click(createButton)
+
+      // Dialog should now be visible
+      await waitFor(() => {
+        const dialog = document.querySelector('[data-slot="dialog-content"]')
+        expect(dialog).toBeInTheDocument()
+      })
+
+      // Dialog title should be visible (using data-slot to be specific)
+      const dialogTitle = document.querySelector('[data-slot="dialog-title"]')
+      expect(dialogTitle).toBeInTheDocument()
+      expect(dialogTitle).toHaveTextContent('Create user')
+
+      // Form fields should be visible
+      expect(screen.getByLabelText('Name')).toBeInTheDocument()
+      expect(screen.getByLabelText('Email')).toBeInTheDocument()
+      expect(screen.getByLabelText('Password')).toBeInTheDocument()
+    })
+
+    it('dialog closes when user presses Escape', async () => {
+      const user = userEvent.setup()
+      render(<UsersPage />, { wrapper })
+
+      // Wait for the page to load
+      await waitFor(() =>
+        expect(document.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+      )
+
+      // Open dialog
+      const createButton = screen.getByRole('button', { name: /Create user/i })
+      await user.click(createButton)
+
+      // Confirm dialog is open
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).toBeInTheDocument()
+      })
+
+      // Press Escape
+      await user.keyboard('{Escape}')
+
+      // Dialog should be closed
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+      })
+    })
+
+    it('dialog closes when user clicks the backdrop (overlay)', async () => {
+      const user = userEvent.setup()
+      render(<UsersPage />, { wrapper })
+
+      // Wait for the page to load
+      await waitFor(() =>
+        expect(document.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+      )
+
+      // Open dialog
+      const createButton = screen.getByRole('button', { name: /Create user/i })
+      await user.click(createButton)
+
+      // Confirm dialog is open
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).toBeInTheDocument()
+      })
+
+      // Click the backdrop/overlay to close the dialog
+      const backdrop = document.querySelector('[data-slot="dialog-overlay"]') as HTMLElement
+      expect(backdrop).toBeInTheDocument()
+      await user.click(backdrop)
+
+      // Dialog should be closed
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+      })
+    })
+
+    it('dialog closes when user clicks the close button', async () => {
+      const user = userEvent.setup()
+      render(<UsersPage />, { wrapper })
+
+      // Wait for the page to load
+      await waitFor(() =>
+        expect(document.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+      )
+
+      // Open dialog
+      const createButton = screen.getByRole('button', { name: /Create user/i })
+      await user.click(createButton)
+
+      // Confirm dialog is open
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).toBeInTheDocument()
+      })
+
+      // Click the close button
+      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLElement
+      expect(closeButton).toBeInTheDocument()
+      await user.click(closeButton)
+
+      // Dialog should be closed
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+      })
+    })
+
+    it('can open and close dialog multiple times', async () => {
+      const user = userEvent.setup()
+      render(<UsersPage />, { wrapper })
+
+      // Wait for the page to load
+      await waitFor(() =>
+        expect(document.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+      )
+
+      const createButton = screen.getByRole('button', { name: /Create user/i })
+
+      // First open and close cycle
+      await user.click(createButton)
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).toBeInTheDocument()
+      })
+
+      await user.keyboard('{Escape}')
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+      })
+
+      // Second open and close cycle
+      await user.click(createButton)
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).toBeInTheDocument()
+      })
+
+      const backdrop = document.querySelector('[data-slot="dialog-overlay"]') as HTMLElement
+      await user.click(backdrop)
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="dialog-content"]')).not.toBeInTheDocument()
+      })
+    })
   })
 })
