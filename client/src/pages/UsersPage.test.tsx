@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Role } from 'core'
 import UsersPage from './UsersPage'
 import api from '@/lib/api'
 import { renderWrapper as wrapper } from '@/test/render-with-query'
@@ -16,14 +17,14 @@ const USERS = [
     id: '1',
     name: 'Alice Admin',
     email: 'alice@example.com',
-    role: 'admin' as const,
+    role: Role.admin,
     createdAt: '2024-01-15T00:00:00.000Z',
   },
   {
     id: '2',
     name: 'Bob Agent',
     email: 'bob@example.com',
-    role: 'agent' as const,
+    role: Role.agent,
     createdAt: '2024-03-20T00:00:00.000Z',
   },
 ]

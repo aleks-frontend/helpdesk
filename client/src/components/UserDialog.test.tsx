@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Role } from 'core'
 import { UserDialog } from './UserDialog'
 import api from '@/lib/api'
 import { renderWrapper as wrapper } from '@/test/render-with-query'
@@ -24,7 +25,7 @@ const EXISTING_USER = {
   id: 'user-1',
   name: 'Jane Smith',
   email: 'jane@example.com',
-  role: 'agent' as const,
+  role: Role.agent,
   createdAt: '2024-01-01T00:00:00.000Z',
 }
 

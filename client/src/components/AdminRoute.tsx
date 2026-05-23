@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router'
 import { authClient } from '../lib/auth-client'
+import { Role } from 'core'
 
 interface AdminRouteProps {
   children: React.ReactNode
@@ -12,7 +13,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
 
   const role = (session?.user as { role?: string } | undefined)?.role
 
-  if (role !== 'admin') {
+  if (role !== Role.admin) {
     return <Navigate to="/" replace />
   }
 

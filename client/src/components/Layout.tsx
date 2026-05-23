@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router'
 import { authClient } from '../lib/auth-client'
 import { Button } from '@/components/ui/button'
+import { Role } from 'core'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -10,7 +11,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate()
   const { data: session } = authClient.useSession()
 
-  const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'admin'
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === Role.admin
 
   async function handleSignOut() {
     await authClient.signOut()

@@ -1,4 +1,5 @@
-import { PencilIcon } from 'lucide-react'
+import { PencilIcon, Trash2Icon } from 'lucide-react'
+import { Role } from 'core'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,7 +9,7 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'agent'
+  role: Role
   createdAt: string
 }
 
@@ -21,7 +22,7 @@ function UserTableSkeleton() {
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Joined</TableHead>
-          <TableHead className="w-16" />
+          <TableHead className="w-24" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -44,9 +45,10 @@ interface Props {
   isLoading: boolean
   error: Error | null
   onEdit: (user: User) => void
+  onDelete: (user: User) => void
 }
 
-export function UsersTable({ users, isLoading, error, onEdit }: Props) {
+export function UsersTable({ users, isLoading, error, onEdit, onDelete }: Props) {
   if (isLoading) return <UserTableSkeleton />
   if (error) return <p className="text-sm text-destructive">{error.message}</p>
 
@@ -58,7 +60,7 @@ export function UsersTable({ users, isLoading, error, onEdit }: Props) {
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Joined</TableHead>
-          <TableHead className="w-16" />
+          <TableHead className="w-24" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -67,7 +69,7 @@ export function UsersTable({ users, isLoading, error, onEdit }: Props) {
             <TableCell className="font-medium text-foreground">{user.name}</TableCell>
             <TableCell className="text-muted-foreground">{user.email}</TableCell>
             <TableCell>
-              <Badge variant={user.role === 'admin' ? 'primary' : 'default'}>
+              <Badge variant={user.role === Role.admin ? 'primary' : 'default'}>
                 {user.role}
               </Badge>
             </TableCell>
@@ -75,9 +77,20 @@ export function UsersTable({ users, isLoading, error, onEdit }: Props) {
               {new Date(user.createdAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
-              <Button variant="ghost" size="icon" onClick={() => onEdit(user)} aria-label="Edit user">
-                <PencilIcon className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => onEdit(user)} aria-label="Edit user">
+                  <PencilIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(user)}
+                  disabled={user.role === Role.admin}
+                  aria-label="Delete user"
+                >
+                  <Trash2Icon className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

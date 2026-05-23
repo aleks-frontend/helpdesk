@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Role, roleSchema } from 'core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +20,7 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'agent'
+  role: Role
   createdAt: string
 }
 
@@ -32,7 +33,7 @@ interface Props {
 const baseFields = {
   name: z.string().trim().min(3, 'Name must be at least 3 characters.'),
   email: z.string().email('A valid email is required.'),
-  role: z.enum(['admin', 'agent']).optional(),
+  role: roleSchema.optional(),
 }
 
 const createFormSchema = z.object({
@@ -51,7 +52,7 @@ const editFormSchema = z.object({
 type FormValues = {
   name: string
   email: string
-  role?: 'admin' | 'agent'
+  role?: Role
   password?: string
 }
 
@@ -138,8 +139,8 @@ export function UserDialog({ open, onOpenChange, user }: Props) {
                 {...register('role')}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="agent">agent</option>
-                <option value="admin">admin</option>
+                <option value={Role.agent}>{Role.agent}</option>
+                <option value={Role.admin}>{Role.admin}</option>
               </select>
               {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
             </div>

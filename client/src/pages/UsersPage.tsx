@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { PlusIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Role } from 'core'
 import { UserDialog } from '@/components/UserDialog'
+import { DeleteUserDialog } from '@/components/DeleteUserDialog'
 import { UsersTable } from '@/components/UsersTable'
 import api from '@/lib/api'
 
@@ -11,13 +13,14 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'agent'
+  role: Role
   createdAt: string
 }
 
 export default function UsersPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [deletingUser, setDeletingUser] = useState<User | null>(null)
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users'],
@@ -50,6 +53,7 @@ export default function UsersPage() {
             isLoading={isLoading}
             error={error as Error | null}
             onEdit={openEdit}
+            onDelete={(user) => setDeletingUser(user)}
           />
         </CardContent>
       </Card>
@@ -61,6 +65,11 @@ export default function UsersPage() {
           if (!open) setEditingUser(null)
         }}
         user={editingUser}
+      />
+      <DeleteUserDialog
+        user={deletingUser}
+        open={deletingUser !== null}
+        onOpenChange={(open) => { if (!open) setDeletingUser(null) }}
       />
     </div>
   )
