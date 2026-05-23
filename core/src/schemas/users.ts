@@ -7,3 +7,12 @@ export const createUserSchema = z.object({
 })
 
 export type CreateUserInput = z.infer<typeof createUserSchema>
+
+export const updateUserSchema = z.object({
+  name: z.string().trim().min(3, 'Name must be at least 3 characters.'),
+  email: z.string().email('A valid email is required.'),
+  role: z.enum(['admin', 'agent']),
+  password: z.string().min(8, 'Password must be at least 8 characters.').optional(),
+})
+
+export type UpdateUserInput = z.infer<typeof updateUserSchema>

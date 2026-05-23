@@ -124,7 +124,8 @@ server/src/
 ├── index.ts                    # Express app; auth handler, /api/health, /api/me
 ├── lib/
 │   ├── auth.ts                 # betterAuth() config with prismaAdapter + role field
-│   └── prisma.ts               # PrismaClient singleton
+│   ├── prisma.ts               # PrismaClient singleton
+│   └── validate-body.ts        # validateBody(schema, req.body, res) — returns parsed data or sends 400 and returns null
 ├── middleware/
 │   └── require-auth.ts         # Express middleware; attaches req.user + req.session
 ├── routes/
@@ -149,5 +150,5 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 - shadcn/ui uses the **base-nova** style; components live in `client/src/components/ui/`. Installed: button, card, input, label, skeleton, table, badge, dialog.
 - Rate limiting (`express-rate-limit`) on auth routes is enabled only when `NODE_ENV=production`.
 - Vite proxy target is configurable via `API_SERVER_URL` env var (defaults to `http://localhost:3000`).
-- **Zod** is used for all data validation — on the server (request body parsing via `z.object(...).safeParse(req.body)`) and on the client (form schemas with `react-hook-form` + `@hookform/resolvers/zod`). Never write manual type/format checks when Zod can handle it.
+- **Zod** is used for all data validation — on the server (request body parsing via `validateBody(schema, req.body, res)` from `server/src/lib/validate-body.ts`) and on the client (form schemas with `react-hook-form` + `@hookform/resolvers/zod`). Never write manual type/format checks when Zod can handle it. Never inline `safeParse` + 400 response in a route — use `validateBody` instead.
 - **Shared schemas live in `core/`** — any Zod schema used by both client and server must be defined in `core/src/schemas/` and exported from `core/src/index.ts`. Both packages import from `'core'`. Never duplicate a schema across client and server.

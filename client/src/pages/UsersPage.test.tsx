@@ -115,7 +115,7 @@ describe('UsersPage', () => {
     expect(mockGet).toHaveBeenCalledWith('/users')
   })
 
-  describe('CreateUserDialog', () => {
+  describe('UserDialog', () => {
     beforeEach(() => {
       mockGet.mockResolvedValue({ data: { users: [] } })
     })
