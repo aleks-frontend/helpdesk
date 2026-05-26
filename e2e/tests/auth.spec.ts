@@ -228,10 +228,10 @@ test.describe('Admin access', () => {
     await expect(page).toHaveURL('/users')
   })
 
-  test('/users page renders Users heading for admin', async ({ page }) => {
+  test('/users page renders Users card title for admin', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/users')
-    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible()
+    await expect(page.locator('[data-slot="card-title"]', { hasText: 'Users' })).toBeVisible()
   })
 })
 
