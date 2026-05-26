@@ -60,7 +60,14 @@
       "Bash(curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H 'Content-Type: application/json' -H 'Origin: http://localhost:5174' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Dest: empty' -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')",
       "Bash(npx vitest *)",
       "Bash(npm test *)",
-      "Bash(bun prisma *)"
+      "Bash(bun prisma *)",
+      "Bash(lsof -ti:3001,5174)",
+      "Bash(lsof -ti:3000,3001,5174)",
+      "Bash(API_SERVER_URL=http://localhost:3001 node -e \"console.log\\('API_SERVER_URL:', process.env.API_SERVER_URL\\)\")",
+      "Bash(API_SERVER_URL=http://localhost:3001 node --input-type=module)",
+      "Bash(API_SERVER_URL=http://localhost:3001 timeout 5 npx vite --port 5174)",
+      "Bash(API_SERVER_URL=http://localhost:3001 node -e ' *)",
+      "Bash(DATABASE_URL=postgresql://postgres:160598710Ag@localhost:5432/helpdesk_test?schema=public ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=password123 npx tsx prisma/seed.ts)"
     ]
   }
 }
