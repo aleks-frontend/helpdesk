@@ -15,17 +15,18 @@ enum Role {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  role          Role      @default(agent)
-  createdAt     DateTime
-  updatedAt     DateTime
-  deletedAt     DateTime?
-  sessions      Session[]
-  accounts      Account[]
+  id              String    @id
+  name            String
+  email           String    @unique
+  emailVerified   Boolean
+  image           String?
+  role            Role      @default(agent)
+  createdAt       DateTime
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  sessions        Session[]
+  accounts        Account[]
+  assignedTickets Ticket[]
 
   @@map("user")
 }
@@ -72,4 +73,50 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+enum TicketStatus {
+  open
+  resolved
+  closed
+}
+
+enum TicketCategory {
+  general
+  technical
+  refund
+}
+
+enum MessageSender {
+  ai
+  agent
+  student
+}
+
+model Ticket {
+  id              String         @id @default(uuid())
+  studentEmail    String
+  studentName     String
+  subject         String
+  body            String
+  status          TicketStatus   @default(open)
+  category        TicketCategory @default(general)
+  assignedAgentId String?
+  assignedAgent   User?          @relation(fields: [assignedAgentId], references: [id])
+  messages        Message[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("ticket")
+}
+
+model Message {
+  id        String        @id @default(uuid())
+  ticketId  String
+  ticket    Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body      String
+  sender    MessageSender
+  createdAt DateTime      @default(now())
+
+  @@map("message")
 }

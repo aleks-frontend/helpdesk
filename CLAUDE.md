@@ -63,17 +63,16 @@ Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of
 - pgvector for knowledge-base embeddings
 - Claude API (`claude-sonnet-4-6`) for ticket classification, summarisation, RAG reply generation, and escalation decisions
 - SendGrid or Mailgun for outbound email
-- Inbound email via webhook at `POST /webhooks/email`
 
 **Current data model (Prisma schema):**
 - `User` — id, name, email, emailVerified, image, role (admin | agent), createdAt, updatedAt
 - `Session` — id, token, userId, expiresAt, ipAddress, userAgent
 - `Account` — Better Auth credential/OAuth account record linked to User
 - `Verification` — Better Auth email verification tokens
-
-**Planned models (not yet in schema):**
 - `Ticket` — studentEmail, studentName, subject, body, status (open | resolved | closed), category (general | technical | refund), assignedAgentId
 - `Message` — ticketId, body, sender (ai | agent | student)
+
+**Planned models (not yet in schema):**
 - `KnowledgeArticle` — title, content, embedding (pgvector)
 
 **AI pipeline order** (Phase 7): auto-classify → summarise → RAG retrieval → reply generation → escalation check → agent-suggested reply UI.
@@ -114,7 +113,8 @@ client/src/
 core/src/
 ├── index.ts              # Re-exports everything
 └── schemas/
-    └── users.ts          # createUserSchema, CreateUserInput
+    ├── users.ts          # createUserSchema, updateUserSchema, Role, CreateUserInput, UpdateUserInput
+    └── tickets.ts        # inboundEmailSchema, TicketStatus, TicketCategory, InboundEmailInput
 ```
 
 ## Server structure
@@ -129,7 +129,9 @@ server/src/
 ├── middleware/
 │   └── require-auth.ts         # Express middleware; attaches req.user + req.session
 ├── routes/
-│   └── users.ts                # GET /api/users, POST /api/users (admin only)
+│   ├── users.ts                # GET /api/users, POST /api/users, PATCH /api/users/:id, DELETE /api/users/:id (admin only)
+│   ├── tickets.ts              # GET /api/tickets (auth required, any role)
+│   └── webhook.ts              # POST /webhooks/email — inbound email → ticket
 └── generated/prisma/           # Prisma-generated client (do not edit)
 ```
 
@@ -153,3 +155,4 @@ Always use context7 (`mcp__context7`) to fetch up-to-date documentation when wor
 - **Zod** is used for all data validation — on the server (request body parsing via `validateBody(schema, req.body, res)` from `server/src/lib/validate-body.ts`) and on the client (form schemas with `react-hook-form` + `@hookform/resolvers/zod`). Never write manual type/format checks when Zod can handle it. Never inline `safeParse` + 400 response in a route — use `validateBody` instead.
 - **Shared schemas live in `core/`** — any Zod schema used by both client and server must be defined in `core/src/schemas/` and exported from `core/src/index.ts`. Both packages import from `'core'`. Never duplicate a schema across client and server.
 - **Never hardcode role strings** — always import `Role` from `'core'` and use `Role.admin` / `Role.agent`. The `Role` const and its derived type live in `core/src/schemas/users.ts`.
+- **Use `z.email()` for email validation**, not `z.string().email()` — the top-level `z.email()` is the Zod v4 API; the chained form is deprecated.

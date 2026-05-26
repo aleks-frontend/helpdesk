@@ -32,7 +32,7 @@ interface Props {
 
 const baseFields = {
   name: z.string().trim().min(3, 'Name must be at least 3 characters.'),
-  email: z.string().email('A valid email is required.'),
+  email: z.email('A valid email is required.'),
   role: roleSchema.optional(),
 }
 

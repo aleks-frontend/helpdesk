@@ -67,7 +67,8 @@
       "Bash(API_SERVER_URL=http://localhost:3001 node --input-type=module)",
       "Bash(API_SERVER_URL=http://localhost:3001 timeout 5 npx vite --port 5174)",
       "Bash(API_SERVER_URL=http://localhost:3001 node -e ' *)",
-      "Bash(DATABASE_URL=postgresql://postgres:160598710Ag@localhost:5432/helpdesk_test?schema=public ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=password123 npx tsx prisma/seed.ts)"
+      "Bash(DATABASE_URL=postgresql://postgres:160598710Ag@localhost:5432/helpdesk_test?schema=public ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=password123 npx tsx prisma/seed.ts)",
+      "Bash(curl *)"
     ]
   }
 }

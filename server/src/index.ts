@@ -6,6 +6,8 @@ import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth.js'
 import { requireAuth } from './middleware/require-auth.js'
 import { usersRouter } from './routes/users.js'
+import { webhookRouter } from './routes/webhook.js'
+import { ticketsRouter } from './routes/tickets.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -35,7 +37,8 @@ app.get('/api/me', requireAuth, (req, res) => {
 })
 
 app.use('/api/users', usersRouter)
-
+app.use('/webhooks', webhookRouter)
+app.use('/api/tickets', ticketsRouter)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err)
