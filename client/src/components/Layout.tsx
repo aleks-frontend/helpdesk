@@ -23,6 +23,12 @@ export default function Layout({ children }: LayoutProps) {
       <nav className="border-b border-border bg-background px-6 py-2 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="font-semibold text-foreground">Helpdesk</Link>
+          <Link
+            to="/tickets"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Tickets
+          </Link>
           {isAdmin && (
             <Link
               to="/users"

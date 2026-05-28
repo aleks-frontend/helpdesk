@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import UsersPage from './pages/UsersPage'
+import TicketsPage from './pages/TicketsPage'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
@@ -16,6 +17,16 @@ export default function App() {
           <ProtectedRoute>
             <Layout>
               <HomePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tickets"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <TicketsPage />
             </Layout>
           </ProtectedRoute>
         }

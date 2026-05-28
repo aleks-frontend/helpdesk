@@ -39,6 +39,8 @@ npm run test:e2e
 npm run test:e2e:ui
 ```
 
+**Prefer unit tests over e2e tests.** Write component unit tests for all pages and components — they run fast, stay isolated, and catch regressions early. Only reach for e2e tests when verifying behaviour that genuinely requires a real browser, real auth session, and a running server (e.g. auth redirects, multi-step flows across client and server, webhook integration). Do not write e2e tests for things already covered by unit tests.
+
 Use the **`component-unit-tester`** agent to write component unit tests. It has full knowledge of the test infrastructure, shared utilities, mocking patterns, and coverage conventions for this project.
 
 Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of the test infrastructure, selector strategy, auth fixture patterns, and coverage checklists.
