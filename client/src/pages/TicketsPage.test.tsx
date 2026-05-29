@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { TicketStatus, TicketCategory } from 'core'
 import TicketsPage from './TicketsPage'
 import api from '@/lib/api'
@@ -129,13 +130,15 @@ describe('TicketsPage', () => {
     expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument()
   })
 
-  it('calls GET /tickets on mount', async () => {
+  it('calls GET /tickets with default sort (createdAt desc) on mount', async () => {
     mockGet.mockResolvedValue({ data: { tickets: [] } })
 
     render(<TicketsPage />, { wrapper })
 
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
-    expect(mockGet).toHaveBeenCalledWith('/tickets')
+    expect(mockGet).toHaveBeenCalledWith('/tickets', {
+      params: { sortBy: 'createdAt', sortOrder: 'desc' },
+    })
   })
 
   it('preserves API response order (newest first)', async () => {
@@ -185,5 +188,82 @@ describe('TicketsPage', () => {
     expect(screen.getByText('general')).toBeInTheDocument()
     expect(screen.getByText('technical')).toBeInTheDocument()
     expect(screen.getByText('refund')).toBeInTheDocument()
+  })
+})
+
+describe('TicketsPage — sorting', () => {
+  it('clicking "Subject" header refetches with sortBy=subject&sortOrder=asc', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    await user.click(screen.getByRole('button', { name: /Subject/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
+        params: { sortBy: 'subject', sortOrder: 'asc' },
+      }),
+    )
+  })
+
+  it('clicking the same header twice toggles to desc', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    await user.click(screen.getByRole('button', { name: /Subject/i }))
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: { sortBy: 'subject', sortOrder: 'asc' },
+      }),
+    )
+
+    await user.click(screen.getByRole('button', { name: /Subject/i }))
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: { sortBy: 'subject', sortOrder: 'desc' },
+      }),
+    )
+  })
+
+  it('clicking "Received" header toggles from desc to asc (enableSortingRemoval: false)', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    // Default is createdAt desc; click once → asc (no removal, so desc → asc)
+    await user.click(screen.getByRole('button', { name: /Received/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: { sortBy: 'createdAt', sortOrder: 'asc' },
+      }),
+    )
+  })
+
+  it('clicking "From" header sorts by studentName', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    await user.click(screen.getByRole('button', { name: /From/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
+        params: { sortBy: 'studentName', sortOrder: 'asc' },
+      }),
+    )
   })
 })

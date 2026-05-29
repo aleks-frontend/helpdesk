@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { type SortingState } from '@tanstack/react-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TicketsTable } from '@/components/TicketsTable'
 import { TicketStatus, TicketCategory } from 'core'
@@ -15,9 +17,16 @@ interface Ticket {
 }
 
 export default function TicketsPage() {
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'createdAt', desc: true }])
+
+  const sortBy = sorting[0]?.id ?? 'createdAt'
+  const sortOrder = (sorting[0]?.desc ?? true) ? 'desc' : 'asc'
+
   const { data: tickets = [], isLoading, error } = useQuery({
-    queryKey: ['tickets'],
-    queryFn: () => api.get<{ tickets: Ticket[] }>('/tickets').then((r) => r.data.tickets),
+    queryKey: ['tickets', sortBy, sortOrder],
+    queryFn: () =>
+      api.get<{ tickets: Ticket[] }>('/tickets', { params: { sortBy, sortOrder } })
+        .then((r) => r.data.tickets),
   })
 
   return (
@@ -31,6 +40,8 @@ export default function TicketsPage() {
             tickets={tickets}
             isLoading={isLoading}
             error={error as Error | null}
+            sorting={sorting}
+            onSortingChange={setSorting}
           />
         </CardContent>
       </Card>
