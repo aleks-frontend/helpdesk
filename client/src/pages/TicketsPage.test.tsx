@@ -240,7 +240,6 @@ describe('TicketsPage — sorting', () => {
 
     await waitFor(() => screen.getByText('Alice Smith'))
 
-    // Default is createdAt desc; click once → asc (no removal, so desc → asc)
     await user.click(screen.getByRole('button', { name: /Received/i }))
 
     await waitFor(() =>
@@ -263,6 +262,100 @@ describe('TicketsPage — sorting', () => {
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
         params: { sortBy: 'studentName', sortOrder: 'asc' },
+      }),
+    )
+  })
+})
+
+describe('TicketsPage — filtering', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('search input sends search param after 300 ms debounce', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
+
+    await user.type(screen.getByPlaceholderText('Search...'), 'portal')
+
+    await waitFor(
+      () =>
+        expect(mockGet).toHaveBeenCalledWith('/tickets', {
+          params: expect.objectContaining({ search: 'portal' }),
+        }),
+      { timeout: 1000 },
+    )
+  })
+
+  it('"Poništi" button is hidden by default and appears when a filter is active', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
+
+    expect(screen.queryByRole('button', { name: /Clear/i })).not.toBeInTheDocument()
+
+    await user.type(screen.getByPlaceholderText('Search...'), 'test')
+
+    expect(screen.getByRole('button', { name: /Clear/i })).toBeInTheDocument()
+  })
+
+  it('"Poništi" button clears search and hides itself', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
+
+    await user.type(screen.getByPlaceholderText('Search...'), 'portal')
+    // wait for debounce
+    await waitFor(
+      () => expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: expect.objectContaining({ search: 'portal' }),
+      }),
+      { timeout: 1000 },
+    )
+
+    await user.click(screen.getByRole('button', { name: /Clear/i }))
+
+    expect(screen.getByPlaceholderText('Search...')).toHaveValue('')
+    expect(screen.queryByRole('button', { name: /Clear/i })).not.toBeInTheDocument()
+  })
+
+  it('selecting a status option adds status param', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
+
+    const triggers = document.querySelectorAll('[data-slot="select-trigger"]')
+    await user.click(triggers[0] as HTMLElement)
+    await user.click(await screen.findByRole('option', { name: /^Open$/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: expect.objectContaining({ status: 'open' }),
+      }),
+    )
+  })
+
+  it('selecting a category option adds category param', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
+
+    const triggers = document.querySelectorAll('[data-slot="select-trigger"]')
+    await user.click(triggers[1] as HTMLElement)
+    await user.click(await screen.findByRole('option', { name: /^Technical$/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: expect.objectContaining({ category: 'technical' }),
       }),
     )
   })
