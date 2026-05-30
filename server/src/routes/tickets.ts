@@ -1,20 +1,13 @@
 import { Router } from 'express'
-import { z } from 'zod'
 import { requireAuth } from '../middleware/require-auth.js'
 import { prisma } from '../lib/prisma.js'
 import { validateBody } from '../lib/validate-body.js'
+import { ticketQuerySchema } from '../schemas/tickets.js'
 
 export const ticketsRouter = Router()
 
-const SORTABLE = ['subject', 'studentName', 'status', 'category', 'createdAt'] as const
-
-const sortSchema = z.object({
-  sortBy: z.enum(SORTABLE).optional().default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
-})
-
 ticketsRouter.get('/', requireAuth, async (req, res) => {
-  const params = validateBody(sortSchema, req.query, res)
+  const params = validateBody(ticketQuerySchema, req.query, res)
   if (!params) return
   const { sortBy, sortOrder } = params
   const tickets = await prisma.ticket.findMany({
