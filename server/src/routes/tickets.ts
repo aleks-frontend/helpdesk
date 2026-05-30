@@ -9,7 +9,7 @@ export const ticketsRouter = Router()
 ticketsRouter.get('/', requireAuth, async (req, res) => {
   const params = validateBody(ticketQuerySchema, req.query, res)
   if (!params) return
-  const { sortBy, sortOrder, status, category, search } = params
+  const { sortBy, sortOrder, status, category, search, page, pageSize } = params
 
   const where = {
     ...(status   && { status }),
@@ -23,18 +23,24 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
     }),
   }
 
-  const tickets = await prisma.ticket.findMany({
-    select: {
-      id: true,
-      studentEmail: true,
-      studentName: true,
-      subject: true,
-      status: true,
-      category: true,
-      createdAt: true,
-    },
-    where,
-    orderBy: { [sortBy]: sortOrder },
-  })
-  res.json({ tickets })
+  const [tickets, total] = await Promise.all([
+    prisma.ticket.findMany({
+      select: {
+        id: true,
+        studentEmail: true,
+        studentName: true,
+        subject: true,
+        status: true,
+        category: true,
+        createdAt: true,
+      },
+      where,
+      orderBy: { [sortBy]: sortOrder },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.ticket.count({ where }),
+  ])
+
+  res.json({ tickets, total, page, pageSize })
 })

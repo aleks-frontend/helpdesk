@@ -12,4 +12,6 @@ export const ticketQuerySchema = z.object({
   status: z.enum(STATUS_VALUES).optional(),
   category: z.enum(CATEGORY_VALUES).optional(),
   search: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 })

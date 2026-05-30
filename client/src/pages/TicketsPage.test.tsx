@@ -33,6 +33,10 @@ const TICKETS = [
   },
 ]
 
+function ticketResponse(tickets = TICKETS, total = tickets.length) {
+  return { data: { tickets, total, page: 1, pageSize: 10 } }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -53,7 +57,7 @@ describe('TicketsPage', () => {
   })
 
   it('renders a row for each ticket after data loads', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -65,7 +69,7 @@ describe('TicketsPage', () => {
   })
 
   it('renders student email below student name', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -76,7 +80,7 @@ describe('TicketsPage', () => {
   })
 
   it('renders status badges', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -87,7 +91,7 @@ describe('TicketsPage', () => {
   })
 
   it('renders category badges', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -98,7 +102,7 @@ describe('TicketsPage', () => {
   })
 
   it('formats createdAt as a local date string', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -109,7 +113,7 @@ describe('TicketsPage', () => {
   })
 
   it('shows "No tickets yet." when the tickets list is empty', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    mockGet.mockResolvedValue(ticketResponse([]))
 
     render(<TicketsPage />, { wrapper })
 
@@ -130,19 +134,19 @@ describe('TicketsPage', () => {
     expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument()
   })
 
-  it('calls GET /tickets with default sort (createdAt desc) on mount', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+  it('calls GET /tickets with default params on mount', async () => {
+    mockGet.mockResolvedValue(ticketResponse([]))
 
     render(<TicketsPage />, { wrapper })
 
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1))
     expect(mockGet).toHaveBeenCalledWith('/tickets', {
-      params: { sortBy: 'createdAt', sortOrder: 'desc' },
+      params: { sortBy: 'createdAt', sortOrder: 'desc', page: 1, pageSize: 10 },
     })
   })
 
   it('preserves API response order (newest first)', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
 
     render(<TicketsPage />, { wrapper })
 
@@ -162,7 +166,7 @@ describe('TicketsPage', () => {
       { ...TICKETS[0], id: 'b', subject: 'Ticket B', status: TicketStatus.resolved },
       { ...TICKETS[0], id: 'c', subject: 'Ticket C', status: TicketStatus.closed },
     ]
-    mockGet.mockResolvedValue({ data: { tickets } })
+    mockGet.mockResolvedValue(ticketResponse(tickets))
 
     render(<TicketsPage />, { wrapper })
 
@@ -179,7 +183,7 @@ describe('TicketsPage', () => {
       { ...TICKETS[0], id: 'b', subject: 'Ticket B', category: TicketCategory.technical },
       { ...TICKETS[0], id: 'c', subject: 'Ticket C', category: TicketCategory.refund },
     ]
-    mockGet.mockResolvedValue({ data: { tickets } })
+    mockGet.mockResolvedValue(ticketResponse(tickets))
 
     render(<TicketsPage />, { wrapper })
 
@@ -193,7 +197,7 @@ describe('TicketsPage', () => {
 
 describe('TicketsPage — sorting', () => {
   it('clicking "Subject" header refetches with sortBy=subject&sortOrder=asc', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -204,13 +208,13 @@ describe('TicketsPage — sorting', () => {
 
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
-        params: { sortBy: 'subject', sortOrder: 'asc' },
+        params: expect.objectContaining({ sortBy: 'subject', sortOrder: 'asc' }),
       }),
     )
   })
 
   it('clicking the same header twice toggles to desc', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -220,20 +224,20 @@ describe('TicketsPage — sorting', () => {
     await user.click(screen.getByRole('button', { name: /Subject/i }))
     await waitFor(() =>
       expect(mockGet).toHaveBeenCalledWith('/tickets', {
-        params: { sortBy: 'subject', sortOrder: 'asc' },
+        params: expect.objectContaining({ sortBy: 'subject', sortOrder: 'asc' }),
       }),
     )
 
     await user.click(screen.getByRole('button', { name: /Subject/i }))
     await waitFor(() =>
       expect(mockGet).toHaveBeenCalledWith('/tickets', {
-        params: { sortBy: 'subject', sortOrder: 'desc' },
+        params: expect.objectContaining({ sortBy: 'subject', sortOrder: 'desc' }),
       }),
     )
   })
 
   it('clicking "Received" header toggles from desc to asc (enableSortingRemoval: false)', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -244,13 +248,13 @@ describe('TicketsPage — sorting', () => {
 
     await waitFor(() =>
       expect(mockGet).toHaveBeenCalledWith('/tickets', {
-        params: { sortBy: 'createdAt', sortOrder: 'asc' },
+        params: expect.objectContaining({ sortBy: 'createdAt', sortOrder: 'asc' }),
       }),
     )
   })
 
   it('clicking "From" header sorts by studentName', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: TICKETS } })
+    mockGet.mockResolvedValue(ticketResponse())
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -261,7 +265,7 @@ describe('TicketsPage — sorting', () => {
 
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
-        params: { sortBy: 'studentName', sortOrder: 'asc' },
+        params: expect.objectContaining({ sortBy: 'studentName', sortOrder: 'asc' }),
       }),
     )
   })
@@ -271,7 +275,7 @@ describe('TicketsPage — filtering', () => {
   afterEach(() => vi.useRealTimers())
 
   it('search input sends search param after 300 ms debounce', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    mockGet.mockResolvedValue(ticketResponse([]))
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -288,8 +292,8 @@ describe('TicketsPage — filtering', () => {
     )
   })
 
-  it('"Poništi" button is hidden by default and appears when a filter is active', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+  it('"Clear" button is hidden by default and appears when a filter is active', async () => {
+    mockGet.mockResolvedValue(ticketResponse([]))
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -302,8 +306,8 @@ describe('TicketsPage — filtering', () => {
     expect(screen.getByRole('button', { name: /Clear/i })).toBeInTheDocument()
   })
 
-  it('"Poništi" button clears search and hides itself', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+  it('"Clear" button clears search and hides itself', async () => {
+    mockGet.mockResolvedValue(ticketResponse([]))
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -325,7 +329,7 @@ describe('TicketsPage — filtering', () => {
   })
 
   it('selecting a status option adds status param', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    mockGet.mockResolvedValue(ticketResponse([]))
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -343,7 +347,7 @@ describe('TicketsPage — filtering', () => {
   })
 
   it('selecting a category option adds category param', async () => {
-    mockGet.mockResolvedValue({ data: { tickets: [] } })
+    mockGet.mockResolvedValue(ticketResponse([]))
     const user = userEvent.setup()
 
     render(<TicketsPage />, { wrapper })
@@ -356,6 +360,106 @@ describe('TicketsPage — filtering', () => {
     await waitFor(() =>
       expect(mockGet).toHaveBeenCalledWith('/tickets', {
         params: expect.objectContaining({ category: 'technical' }),
+      }),
+    )
+  })
+})
+
+describe('TicketsPage — pagination', () => {
+  it('hides prev/next controls when there is only one page', async () => {
+    mockGet.mockResolvedValue(ticketResponse(TICKETS, 2))
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    expect(screen.queryByRole('button', { name: /Previous/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Next/i })).not.toBeInTheDocument()
+  })
+
+  it('shows prev/next controls and page info when total exceeds page size', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS, total: 25, page: 1, pageSize: 10 } })
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByText('Alice Smith'))
+
+    expect(screen.getByRole('button', { name: /Previous/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument()
+    expect(screen.getByText('Page 1 of 3 (25 tickets)')).toBeInTheDocument()
+  })
+
+  it('"Previous" is disabled on first page', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS, total: 25, page: 1, pageSize: 10 } })
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByRole('button', { name: /Previous/i }))
+
+    expect(screen.getByRole('button', { name: /Previous/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Next/i })).not.toBeDisabled()
+  })
+
+  it('clicking "Next" increments page param', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS, total: 25, page: 1, pageSize: 10 } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByRole('button', { name: /Next/i }))
+    await user.click(screen.getByRole('button', { name: /Next/i }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
+        params: expect.objectContaining({ page: 2, pageSize: 10 }),
+      }),
+    )
+  })
+
+  it('sorting resets page to 1', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS, total: 25, page: 1, pageSize: 10 } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByRole('button', { name: /Next/i }))
+    await user.click(screen.getByRole('button', { name: /Next/i }))
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: expect.objectContaining({ page: 2 }),
+      }),
+    )
+
+    await user.click(screen.getByRole('button', { name: /Subject/i }))
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
+        params: expect.objectContaining({ page: 1, sortBy: 'subject' }),
+      }),
+    )
+  })
+
+  it('changing page size resets page to 1 and updates pageSize param', async () => {
+    mockGet.mockResolvedValue({ data: { tickets: TICKETS, total: 25, page: 1, pageSize: 10 } })
+    const user = userEvent.setup()
+
+    render(<TicketsPage />, { wrapper })
+
+    await waitFor(() => screen.getByRole('button', { name: /Next/i }))
+    await user.click(screen.getByRole('button', { name: /Next/i }))
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenCalledWith('/tickets', {
+        params: expect.objectContaining({ page: 2 }),
+      }),
+    )
+
+    const triggers = document.querySelectorAll('[data-slot="select-trigger"]')
+    const pageSizeTrigger = triggers[triggers.length - 1] as HTMLElement
+    await user.click(pageSizeTrigger)
+    await user.click(await screen.findByRole('option', { name: '20' }))
+
+    await waitFor(() =>
+      expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
+        params: expect.objectContaining({ page: 1, pageSize: 20 }),
       }),
     )
   })
