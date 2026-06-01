@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import UsersPage from './pages/UsersPage'
 import TicketsPage from './pages/TicketsPage'
+import TicketDetailPage from './pages/TicketDetailPage'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
@@ -27,6 +28,16 @@ export default function App() {
           <ProtectedRoute>
             <Layout>
               <TicketsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tickets/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <TicketDetailPage />
             </Layout>
           </ProtectedRoute>
         }

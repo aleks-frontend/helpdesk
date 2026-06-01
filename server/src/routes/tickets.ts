@@ -44,3 +44,28 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
 
   res.json({ tickets, total, page, pageSize })
 })
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+ticketsRouter.get('/:id', requireAuth, async (req, res) => {
+  const id = String(req.params.id)
+  if (!UUID_RE.test(id)) {
+    res.status(400).json({ error: 'Invalid ticket ID' })
+    return
+  }
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      assignedAgent: { select: { id: true, name: true, email: true } },
+    },
+  })
+
+  if (!ticket) {
+    res.status(404).json({ error: 'Ticket not found' })
+    return
+  }
+
+  res.json(ticket)
+})

@@ -128,3 +128,9 @@
     @apply font-sans;
     }
 }
+
+@layer utilities {
+  .link {
+    @apply text-foreground hover:underline;
+  }
+}

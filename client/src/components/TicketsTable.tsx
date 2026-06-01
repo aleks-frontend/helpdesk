@@ -8,6 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { Link } from 'react-router'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -48,7 +49,12 @@ const columns = [
   columnHelper.accessor('subject', {
     header: 'Subject',
     cell: (info) => (
-      <span className="font-medium text-foreground">{info.getValue()}</span>
+      <Link
+        to={`/tickets/${info.row.original.id}`}
+        className="font-medium link"
+      >
+        {info.getValue()}
+      </Link>
     ),
   }),
   columnHelper.accessor('studentName', {
