@@ -24,3 +24,9 @@ export const inboundEmailSchema = z.object({
 })
 
 export type InboundEmailInput = z.infer<typeof inboundEmailSchema>
+
+export const assignTicketSchema = z.object({
+  assignedAgentId: z.string().min(1).nullable(),
+})
+
+export type AssignTicketInput = z.infer<typeof assignTicketSchema>

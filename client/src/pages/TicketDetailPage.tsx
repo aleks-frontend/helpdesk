@@ -1,9 +1,15 @@
 import { useParams, Link } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select'
 import { TicketStatus, TicketCategory } from 'core'
 import api from '@/lib/api'
 
@@ -16,6 +22,12 @@ interface Message {
   createdAt: string
 }
 
+interface Agent {
+  id: string
+  name: string
+  email: string
+}
+
 interface TicketDetail {
   id: string
   studentEmail: string
@@ -24,9 +36,10 @@ interface TicketDetail {
   body: string
   status: TicketStatus
   category: TicketCategory
+  assignedAgentId: string | null
+  assignedAgent: Agent | null
   createdAt: string
   updatedAt: string
-  assignedAgent: { id: string; name: string; email: string } | null
   messages: Message[]
 }
 
@@ -95,12 +108,29 @@ function TicketDetailSkeleton() {
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
 
   const { data: ticket, isLoading, error } = useQuery({
     queryKey: ['ticket', id],
     queryFn: () => api.get<TicketDetail>(`/tickets/${id}`).then((r) => r.data),
     enabled: !!id,
   })
+
+  const { data: agentsData } = useQuery({
+    queryKey: ['agents'],
+    queryFn: () => api.get<{ users: Agent[] }>('/users/agents').then((r) => r.data),
+  })
+  const agents = agentsData?.users ?? []
+
+  const assignMutation = useMutation({
+    mutationFn: (assignedAgentId: string | null) =>
+      api.patch(`/tickets/${id}`, { assignedAgentId }).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
+  })
+
+  function handleAssign(value: string | null) {
+    assignMutation.mutate(value || null)
+  }
 
   if (isLoading) return <TicketDetailSkeleton />
 
@@ -132,7 +162,7 @@ export default function TicketDetailPage() {
             <Badge variant={categoryVariant(ticket.category)}>{ticket.category}</Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-1.5 text-sm">
+        <CardContent className="space-y-2 text-sm">
           <p>
             <span className="text-muted-foreground">From: </span>
             <span className="font-medium">{ticket.studentName}</span>
@@ -141,12 +171,28 @@ export default function TicketDetailPage() {
           <p className="text-muted-foreground">
             Received: {new Date(ticket.createdAt).toLocaleString()}
           </p>
-          {ticket.assignedAgent && (
-            <p>
-              <span className="text-muted-foreground">Assigned to: </span>
-              <span className="font-medium">{ticket.assignedAgent.name}</span>
-            </p>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Assigned to:</span>
+            <Select
+              value={ticket.assignedAgentId ?? ''}
+              onValueChange={handleAssign}
+              disabled={assignMutation.isPending}
+            >
+              <SelectTrigger className="h-7 w-44">
+                <span className={`flex flex-1 text-left text-sm truncate ${!ticket.assignedAgent ? 'text-muted-foreground' : ''}`}>
+                  {ticket.assignedAgent?.name ?? 'Unassigned'}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Unassigned</SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 

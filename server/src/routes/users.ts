@@ -9,6 +9,15 @@ import { validateBody } from '../lib/validate-body.js'
 
 export const usersRouter = Router()
 
+usersRouter.get('/agents', requireAuth, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    where: { role: Role.agent, deletedAt: null },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: 'asc' },
+  })
+  res.json({ users })
+})
+
 usersRouter.get('/', requireAuth, requireRole(Role.admin), async (_req, res) => {
   const users = await prisma.user.findMany({
     where: { deletedAt: null },
