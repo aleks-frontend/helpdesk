@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js'
 import { Role } from '../generated/prisma/enums.js'
 import { validateBody } from '../lib/validate-body.js'
 import { ticketQuerySchema } from '../schemas/tickets.js'
-import { assignTicketSchema } from 'core'
+import { updateTicketSchema } from 'core'
 
 export const ticketsRouter = Router()
 
@@ -79,12 +79,12 @@ ticketsRouter.patch('/:id', requireAuth, async (req, res) => {
     return
   }
 
-  const data = validateBody(assignTicketSchema, req.body, res)
+  const data = validateBody(updateTicketSchema, req.body, res)
   if (!data) return
 
-  const { assignedAgentId } = data
+  const { assignedAgentId, status, category } = data
 
-  if (assignedAgentId !== null) {
+  if (assignedAgentId != null) {
     const agent = await prisma.user.findUnique({ where: { id: assignedAgentId } })
     if (!agent || agent.deletedAt || agent.role !== Role.agent) {
       res.status(400).json({ error: 'Invalid agent.' })
@@ -100,7 +100,11 @@ ticketsRouter.patch('/:id', requireAuth, async (req, res) => {
 
   await prisma.ticket.update({
     where: { id },
-    data: { assignedAgentId },
+    data: {
+      ...(assignedAgentId !== undefined && { assignedAgentId }),
+      ...(status !== undefined && { status }),
+      ...(category !== undefined && { category }),
+    },
   })
 
   res.status(204).send()

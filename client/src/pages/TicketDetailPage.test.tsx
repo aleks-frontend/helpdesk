@@ -290,8 +290,9 @@ describe('TicketDetailPage', () => {
 
       await waitFor(() => screen.getByText('Unassigned'))
 
-      const trigger = document.querySelector('[data-slot="select-trigger"]') as HTMLElement
-      await user.click(trigger)
+      // Third trigger: Status, Category, Assigned to
+      const triggers = document.querySelectorAll('[data-slot="select-trigger"]')
+      await user.click(triggers[2] as HTMLElement)
 
       await user.click(await screen.findByRole('option', { name: 'Alice Agent' }))
 
@@ -315,14 +316,15 @@ describe('TicketDetailPage', () => {
 
       await waitFor(() => screen.getByText('Unassigned'))
 
-      const trigger = document.querySelector('[data-slot="select-trigger"]') as HTMLElement
-      await user.click(trigger)
+      // Third trigger: Status, Category, Assigned to
+      const triggers = document.querySelectorAll('[data-slot="select-trigger"]')
+      await user.click(triggers[2] as HTMLElement)
       await user.click(await screen.findByRole('option', { name: 'Alice Agent' }))
 
       // Wait for mutation to be in-flight
       await waitFor(() => expect(mockPatch).toHaveBeenCalled())
 
-      const disabledTrigger = document.querySelector('[data-slot="select-trigger"]') as HTMLElement
+      const disabledTrigger = document.querySelectorAll('[data-slot="select-trigger"]')[2] as HTMLElement
       expect(disabledTrigger).toBeDisabled()
     })
   })

@@ -25,8 +25,13 @@ export const inboundEmailSchema = z.object({
 
 export type InboundEmailInput = z.infer<typeof inboundEmailSchema>
 
-export const assignTicketSchema = z.object({
-  assignedAgentId: z.string().min(1).nullable(),
+const STATUS_VALUES = Object.values(TicketStatus) as [TicketStatus, ...TicketStatus[]]
+const CATEGORY_VALUES = Object.values(TicketCategory) as [TicketCategory, ...TicketCategory[]]
+
+export const updateTicketSchema = z.object({
+  assignedAgentId: z.string().min(1).nullable().optional(),
+  status: z.enum(STATUS_VALUES).optional(),
+  category: z.enum(CATEGORY_VALUES).optional(),
 })
 
-export type AssignTicketInput = z.infer<typeof assignTicketSchema>
+export type UpdateTicketInput = z.infer<typeof updateTicketSchema>

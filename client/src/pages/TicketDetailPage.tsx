@@ -2,7 +2,6 @@ import { useParams, Link } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
@@ -43,16 +42,10 @@ interface TicketDetail {
   messages: Message[]
 }
 
-function statusVariant(status: TicketStatus) {
-  if (status === TicketStatus.open) return 'primary'
-  if (status === TicketStatus.resolved) return 'success'
-  return 'default'
-}
-
-function categoryVariant(category: TicketCategory) {
-  if (category === TicketCategory.technical) return 'primary'
-  if (category === TicketCategory.refund) return 'warning'
-  return 'default'
+type UpdatePayload = {
+  assignedAgentId?: string | null
+  status?: TicketStatus
+  category?: TicketCategory
 }
 
 function senderLabel(sender: MessageSender) {
@@ -91,15 +84,13 @@ function TicketDetailSkeleton() {
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-64" />
-          <div className="flex gap-2 mt-2">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <Skeleton className="h-4 w-48" />
           <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-7 w-44" />
         </CardContent>
       </Card>
     </div>
@@ -122,14 +113,22 @@ export default function TicketDetailPage() {
   })
   const agents = agentsData?.users ?? []
 
-  const assignMutation = useMutation({
-    mutationFn: (assignedAgentId: string | null) =>
-      api.patch(`/tickets/${id}`, { assignedAgentId }).then((r) => r.data),
+  const updateMutation = useMutation({
+    mutationFn: (payload: UpdatePayload) =>
+      api.patch(`/tickets/${id}`, payload).then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
   })
 
   function handleAssign(value: string | null) {
-    assignMutation.mutate(value || null)
+    updateMutation.mutate({ assignedAgentId: value || null })
+  }
+
+  function handleStatus(value: string | null) {
+    if (value) updateMutation.mutate({ status: value as TicketStatus })
+  }
+
+  function handleCategory(value: string | null) {
+    if (value) updateMutation.mutate({ category: value as TicketCategory })
   }
 
   if (isLoading) return <TicketDetailSkeleton />
@@ -144,6 +143,8 @@ export default function TicketDetailPage() {
 
   if (!ticket) return null
 
+  const isPending = updateMutation.isPending
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <Link
@@ -157,41 +158,63 @@ export default function TicketDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">{ticket.subject}</CardTitle>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Badge variant={statusVariant(ticket.status)}>{ticket.status}</Badge>
-            <Badge variant={categoryVariant(ticket.category)}>{ticket.category}</Badge>
-          </div>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>
-            <span className="text-muted-foreground">From: </span>
-            <span className="font-medium">{ticket.studentName}</span>
-            <span className="text-muted-foreground"> &lt;{ticket.studentEmail}&gt;</span>
-          </p>
-          <p className="text-muted-foreground">
-            Received: {new Date(ticket.createdAt).toLocaleString()}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Assigned to:</span>
-            <Select
-              value={ticket.assignedAgentId ?? ''}
-              onValueChange={handleAssign}
-              disabled={assignMutation.isPending}
-            >
-              <SelectTrigger className="h-7 w-44">
-                <span className={`flex flex-1 text-left text-sm truncate ${!ticket.assignedAgent ? 'text-muted-foreground' : ''}`}>
-                  {ticket.assignedAgent?.name ?? 'Unassigned'}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <CardContent className="text-sm">
+          <div className="grid grid-cols-2 gap-x-8">
+            <div className="space-y-2">
+              <p>
+                <span className="text-muted-foreground">From: </span>
+                <span className="font-medium">{ticket.studentName}</span>
+                <span className="text-muted-foreground"> &lt;{ticket.studentEmail}&gt;</span>
+              </p>
+              <p className="text-muted-foreground">
+                Received: {new Date(ticket.createdAt).toLocaleString()}
+              </p>
+            </div>
+            <div className="grid grid-cols-[max-content_1fr] items-center gap-x-3 gap-y-2">
+              <span className="text-muted-foreground">Status:</span>
+              <Select value={ticket.status} onValueChange={handleStatus} disabled={isPending}>
+                <SelectTrigger className="h-7 w-44">
+                  <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.status}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TicketStatus.open}>Open</SelectItem>
+                  <SelectItem value={TicketStatus.resolved}>Resolved</SelectItem>
+                  <SelectItem value={TicketStatus.closed}>Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-muted-foreground">Category:</span>
+              <Select value={ticket.category} onValueChange={handleCategory} disabled={isPending}>
+                <SelectTrigger className="h-7 w-44">
+                  <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.category}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TicketCategory.general}>General</SelectItem>
+                  <SelectItem value={TicketCategory.technical}>Technical</SelectItem>
+                  <SelectItem value={TicketCategory.refund}>Refund</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-muted-foreground">Assigned to:</span>
+              <Select
+                value={ticket.assignedAgentId ?? ''}
+                onValueChange={handleAssign}
+                disabled={isPending}
+              >
+                <SelectTrigger className="h-7 w-44">
+                  <span className={`flex flex-1 text-left text-sm truncate ${!ticket.assignedAgent ? 'text-muted-foreground' : ''}`}>
+                    {ticket.assignedAgent?.name ?? 'Unassigned'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
