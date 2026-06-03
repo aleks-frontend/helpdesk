@@ -146,7 +146,7 @@ export default function TicketDetailPage() {
   const isPending = updateMutation.isPending
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-4">
+    <div className="p-6 max-w-5xl mx-auto space-y-4">
       <Link
         to="/tickets"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground link"
@@ -155,13 +155,13 @@ export default function TicketDetailPage() {
         Back to tickets
       </Link>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">{ticket.subject}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm">
-          <div className="grid grid-cols-2 gap-x-8">
-            <div className="space-y-2">
+      <div className="grid grid-cols-[1fr_260px] gap-6 items-start">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">{ticket.subject}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 text-sm">
               <p>
                 <span className="text-muted-foreground">From: </span>
                 <span className="font-medium">{ticket.studentName}</span>
@@ -170,11 +170,41 @@ export default function TicketDetailPage() {
               <p className="text-muted-foreground">
                 Received: {new Date(ticket.createdAt).toLocaleString()}
               </p>
-            </div>
-            <div className="grid grid-cols-[max-content_1fr] items-center gap-x-3 gap-y-2">
-              <span className="text-muted-foreground">Status:</span>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Original message</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap">{ticket.body}</p>
+            </CardContent>
+          </Card>
+
+          {ticket.messages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Conversation</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {ticket.messages.map((message) => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground">Status</span>
               <Select value={ticket.status} onValueChange={handleStatus} disabled={isPending}>
-                <SelectTrigger className="h-7 w-44">
+                <SelectTrigger className="h-8 w-full">
                   <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.status}</span>
                 </SelectTrigger>
                 <SelectContent>
@@ -183,9 +213,11 @@ export default function TicketDetailPage() {
                   <SelectItem value={TicketStatus.closed}>Closed</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-muted-foreground">Category:</span>
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground">Category</span>
               <Select value={ticket.category} onValueChange={handleCategory} disabled={isPending}>
-                <SelectTrigger className="h-7 w-44">
+                <SelectTrigger className="h-8 w-full">
                   <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.category}</span>
                 </SelectTrigger>
                 <SelectContent>
@@ -194,13 +226,15 @@ export default function TicketDetailPage() {
                   <SelectItem value={TicketCategory.refund}>Refund</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-muted-foreground">Assigned to:</span>
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground">Assigned to</span>
               <Select
                 value={ticket.assignedAgentId ?? ''}
                 onValueChange={handleAssign}
                 disabled={isPending}
               >
-                <SelectTrigger className="h-7 w-44">
+                <SelectTrigger className="h-8 w-full">
                   <span className={`flex flex-1 text-left text-sm truncate ${!ticket.assignedAgent ? 'text-muted-foreground' : ''}`}>
                     {ticket.assignedAgent?.name ?? 'Unassigned'}
                   </span>
@@ -215,31 +249,9 @@ export default function TicketDetailPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Original message</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm whitespace-pre-wrap">{ticket.body}</p>
-        </CardContent>
-      </Card>
-
-      {ticket.messages.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversation</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ticket.messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   )
 }
