@@ -1,27 +1,14 @@
-import { useParams, Link } from 'react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { useParams } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select'
 import { TicketStatus, TicketCategory } from 'core'
+import { BackLink } from '@/components/BackLink'
+import { TicketDetailSkeleton } from '@/components/TicketDetailSkeleton'
+import { ReplyThread } from '@/components/ReplyThread'
 import { ReplyForm } from '@/components/ReplyForm'
+import { UpdateTicket } from '@/components/UpdateTicket'
+import { TicketDetails } from '@/components/TicketDetails'
 import api from '@/lib/api'
-
-type SenderType = 'customer' | 'agent' | 'ai'
-
-interface Reply {
-  id: number
-  body: string
-  senderType: SenderType
-  user: { id: string; name: string } | null
-  createdAt: string
-}
 
 interface Agent {
   id: string
@@ -29,7 +16,7 @@ interface Agent {
   email: string
 }
 
-interface TicketDetail {
+export interface TicketDetail {
   id: string
   senderEmail: string
   senderName: string
@@ -43,100 +30,15 @@ interface TicketDetail {
   updatedAt: string
 }
 
-type UpdatePayload = {
-  assignedAgentId?: string | null
-  status?: TicketStatus
-  category?: TicketCategory
-}
-
-function replyLabel(reply: Reply, senderName: string): string {
-  if (reply.senderType === 'ai') return 'AI'
-  if (reply.senderType === 'agent') return reply.user?.name ?? 'Agent'
-  return senderName
-}
-
-function ReplyBubble({ reply, senderName }: { reply: Reply; senderName: string }) {
-  const isCustomer = reply.senderType === 'customer'
-  return (
-    <div className={`flex flex-col gap-1 ${isCustomer ? 'items-start' : 'items-end'}`}>
-      <span className="text-xs text-muted-foreground">{replyLabel(reply, senderName)}</span>
-      <div
-        className={`max-w-prose rounded-lg px-4 py-2.5 text-sm whitespace-pre-wrap ${
-          isCustomer
-            ? 'bg-muted text-foreground'
-            : reply.senderType === 'ai'
-              ? 'bg-primary/10 text-foreground'
-              : 'bg-primary text-primary-foreground'
-        }`}
-      >
-        {reply.body}
-      </div>
-      <span className="text-xs text-muted-foreground">
-        {new Date(reply.createdAt).toLocaleString()}
-      </span>
-    </div>
-  )
-}
-
-function TicketDetailSkeleton() {
-  return (
-    <div className="p-6 max-w-3xl mx-auto space-y-4">
-      <Skeleton className="h-5 w-32" />
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-64" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-7 w-36" />
-          <Skeleton className="h-7 w-36" />
-          <Skeleton className="h-7 w-44" />
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const queryClient = useQueryClient()
 
   const { data: ticket, isLoading, error } = useQuery({
     queryKey: ['ticket', id],
     queryFn: () => api.get<TicketDetail>(`/tickets/${id}`).then((r) => r.data),
     enabled: !!id,
   })
-
-  const { data: replies = [] } = useQuery({
-    queryKey: ['replies', id],
-    queryFn: () => api.get<Reply[]>(`/tickets/${id}/replies`).then((r) => r.data),
-    enabled: !!id,
-  })
-
-  const { data: agentsData } = useQuery({
-    queryKey: ['agents'],
-    queryFn: () => api.get<{ users: Agent[] }>('/users/agents').then((r) => r.data),
-  })
-  const agents = agentsData?.users ?? []
-
-  const updateMutation = useMutation({
-    mutationFn: (payload: UpdatePayload) =>
-      api.patch(`/tickets/${id}`, payload).then((r) => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
-  })
-
-  function handleAssign(value: string | null) {
-    updateMutation.mutate({ assignedAgentId: value || null })
-  }
-
-  function handleStatus(value: string | null) {
-    if (value) updateMutation.mutate({ status: value as TicketStatus })
-  }
-
-  function handleCategory(value: string | null) {
-    if (value) updateMutation.mutate({ category: value as TicketCategory })
-  }
 
   if (isLoading) return <TicketDetailSkeleton />
 
@@ -150,17 +52,9 @@ export default function TicketDetailPage() {
 
   if (!ticket) return null
 
-  const isPending = updateMutation.isPending
-
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-4">
-      <Link
-        to="/tickets"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground link"
-      >
-        <ArrowLeft className="size-4" />
-        Back to tickets
-      </Link>
+      <BackLink to="/tickets">Back to tickets</BackLink>
 
       <div className="grid grid-cols-[1fr_260px] gap-6 items-start">
         <div className="space-y-4">
@@ -169,14 +63,7 @@ export default function TicketDetailPage() {
               <CardTitle className="text-xl">{ticket.subject}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1.5 text-sm">
-              <p>
-                <span className="text-muted-foreground">From: </span>
-                <span className="font-medium">{ticket.senderName}</span>
-                <span className="text-muted-foreground"> &lt;{ticket.senderEmail}&gt;</span>
-              </p>
-              <p className="text-muted-foreground">
-                Received: {new Date(ticket.createdAt).toLocaleString()}
-              </p>
+              <TicketDetails ticket={ticket} />
             </CardContent>
           </Card>
 
@@ -194,14 +81,7 @@ export default function TicketDetailPage() {
               <CardTitle className="text-base">Conversation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {replies.length > 0 ? (
-                replies.map((reply) => (
-                  <ReplyBubble key={reply.id} reply={reply} senderName={ticket.senderName} />
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No replies yet.</p>
-              )}
-
+              <ReplyThread ticket={ticket} />
               <ReplyForm ticketId={id!} />
             </CardContent>
           </Card>
@@ -212,54 +92,7 @@ export default function TicketDetailPage() {
             <CardTitle className="text-sm font-medium">Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Status</span>
-              <Select value={ticket.status} onValueChange={handleStatus} disabled={isPending}>
-                <SelectTrigger className="h-8 w-full">
-                  <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.status}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={TicketStatus.open}>Open</SelectItem>
-                  <SelectItem value={TicketStatus.resolved}>Resolved</SelectItem>
-                  <SelectItem value={TicketStatus.closed}>Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Category</span>
-              <Select value={ticket.category} onValueChange={handleCategory} disabled={isPending}>
-                <SelectTrigger className="h-8 w-full">
-                  <span className="flex flex-1 text-left text-sm capitalize truncate">{ticket.category}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={TicketCategory.general}>General</SelectItem>
-                  <SelectItem value={TicketCategory.technical}>Technical</SelectItem>
-                  <SelectItem value={TicketCategory.refund}>Refund</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Assigned to</span>
-              <Select
-                value={ticket.assignedAgentId ?? ''}
-                onValueChange={handleAssign}
-                disabled={isPending}
-              >
-                <SelectTrigger className="h-8 w-full">
-                  <span className={`flex flex-1 text-left text-sm truncate ${!ticket.assignedAgent ? 'text-muted-foreground' : ''}`}>
-                    {ticket.assignedAgent?.name ?? 'Unassigned'}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <UpdateTicket ticket={ticket} />
           </CardContent>
         </Card>
       </div>
