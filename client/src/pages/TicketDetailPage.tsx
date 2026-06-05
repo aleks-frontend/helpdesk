@@ -1,7 +1,7 @@
 import { useParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TicketStatus, TicketCategory } from 'core'
+import { type TicketDetail } from 'core'
 import { BackLink } from '@/components/BackLink'
 import { TicketDetailSkeleton } from '@/components/TicketDetailSkeleton'
 import { ReplyThread } from '@/components/ReplyThread'
@@ -9,26 +9,6 @@ import { ReplyForm } from '@/components/ReplyForm'
 import { UpdateTicket } from '@/components/UpdateTicket'
 import { TicketDetails } from '@/components/TicketDetails'
 import api from '@/lib/api'
-
-interface Agent {
-  id: string
-  name: string
-  email: string
-}
-
-export interface TicketDetail {
-  id: string
-  senderEmail: string
-  senderName: string
-  subject: string
-  body: string
-  status: TicketStatus
-  category: TicketCategory
-  assignedAgentId: string | null
-  assignedAgent: Agent | null
-  createdAt: string
-  updatedAt: string
-}
 
 
 export default function TicketDetailPage() {

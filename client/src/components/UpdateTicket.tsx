@@ -5,15 +5,8 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { TicketStatus, TicketCategory } from 'core'
+import { TicketStatus, TicketCategory, type TicketDetail, type Agent } from 'core'
 import api from '@/lib/api'
-import type { TicketDetail } from '@/pages/TicketDetailPage'
-
-interface Agent {
-  id: string
-  name: string
-  email: string
-}
 
 type UpdatePayload = {
   assignedAgentId?: string | null

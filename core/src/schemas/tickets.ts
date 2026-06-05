@@ -36,6 +36,26 @@ export const updateTicketSchema = z.object({
 
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>
 
+export interface Agent {
+  id: string
+  name: string
+  email: string
+}
+
+export interface TicketDetail {
+  id: string
+  senderEmail: string
+  senderName: string
+  subject: string
+  body: string
+  status: TicketStatus
+  category: TicketCategory
+  assignedAgentId: string | null
+  assignedAgent: Agent | null
+  createdAt: string
+  updatedAt: string
+}
+
 export const SenderType = {
   customer: 'customer',
   agent: 'agent',

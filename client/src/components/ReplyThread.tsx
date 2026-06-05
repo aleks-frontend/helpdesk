@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { TicketDetail } from '@/pages/TicketDetailPage'
+import type { TicketDetail } from 'core'
 
 type SenderType = 'customer' | 'agent' | 'ai'
 

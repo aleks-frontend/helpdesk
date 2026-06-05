@@ -1,4 +1,4 @@
-import type { TicketDetail } from '@/pages/TicketDetailPage'
+import type { TicketDetail } from 'core'
 
 interface TicketDetailsProps {
   ticket: TicketDetail
