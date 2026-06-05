@@ -27,6 +27,7 @@ model User {
   sessions        Session[]
   accounts        Account[]
   assignedTickets Ticket[]
+  replies         Reply[]
 
   @@map("user")
 }
@@ -87,36 +88,38 @@ enum TicketCategory {
   refund
 }
 
-enum MessageSender {
-  ai
+enum SenderType {
+  customer
   agent
-  student
+  ai
 }
 
 model Ticket {
   id              String         @id @default(uuid())
-  studentEmail    String
-  studentName     String
+  senderEmail     String
+  senderName      String
   subject         String
   body            String
   status          TicketStatus   @default(open)
   category        TicketCategory @default(general)
   assignedAgentId String?
   assignedAgent   User?          @relation(fields: [assignedAgentId], references: [id])
-  messages        Message[]
+  replies         Reply[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   @@map("ticket")
 }
 
-model Message {
-  id        String        @id @default(uuid())
-  ticketId  String
-  ticket    Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  body      String
-  sender    MessageSender
-  createdAt DateTime      @default(now())
+model Reply {
+  id         Int        @id @default(autoincrement())
+  body       String
+  senderType SenderType
+  ticketId   String
+  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id])
+  createdAt  DateTime   @default(now())
 
-  @@map("message")
+  @@map("reply")
 }

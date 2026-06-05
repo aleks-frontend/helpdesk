@@ -29,15 +29,38 @@ webhookRouter.post('/email', async (req, res) => {
 
   const { from, fromName, subject, body } = data
 
+  const normalizedSubject = subject.replace(/^(re|fwd?):\s*/i, '').trim()
+
+  const existingTicket = await prisma.ticket.findFirst({
+    where: {
+      senderEmail: from,
+      status: 'open',
+      subject: { equals: normalizedSubject, mode: 'insensitive' },
+    },
+  })
+
+  if (existingTicket) {
+    await prisma.reply.create({
+      data: {
+        body,
+        senderType: 'customer',
+        ticketId: existingTicket.id,
+        userId: null,
+      },
+    })
+    res.status(200).json({ ticket: existingTicket })
+    return
+  }
+
   const ticket = await prisma.ticket.create({
     data: {
-      studentEmail: from,
-      studentName: fromName ?? from,
+      senderEmail: from,
+      senderName: fromName ?? from,
       subject,
       body,
-      messages: { create: { body, sender: 'student' } },
+      replies: { create: { body, senderType: 'customer', userId: null } },
     },
-    select: { id: true, studentEmail: true, subject: true, createdAt: true },
+    select: { id: true, senderEmail: true, subject: true, createdAt: true },
   })
 
   res.status(201).json({ ticket })

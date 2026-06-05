@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TicketStatus, TicketCategory } from 'core'
 
-const SORTABLE = ['subject', 'studentName', 'status', 'category', 'createdAt'] as const
+const SORTABLE = ['subject', 'senderName', 'status', 'category', 'createdAt'] as const
 
 const STATUS_VALUES = Object.values(TicketStatus) as [TicketStatus, ...TicketStatus[]]
 const CATEGORY_VALUES = Object.values(TicketCategory) as [TicketCategory, ...TicketCategory[]]

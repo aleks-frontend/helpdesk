@@ -20,8 +20,8 @@ type PageSize = (typeof PAGE_SIZE_OPTIONS)[number]
 
 interface Ticket {
   id: string
-  studentEmail: string
-  studentName: string
+  senderEmail: string
+  senderName: string
   subject: string
   status: TicketStatus
   category: TicketCategory

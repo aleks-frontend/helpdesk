@@ -16,8 +16,8 @@ import { TicketStatus, TicketCategory } from 'core'
 
 interface Ticket {
   id: string
-  studentEmail: string
-  studentName: string
+  senderEmail: string
+  senderName: string
   subject: string
   status: TicketStatus
   category: TicketCategory
@@ -57,12 +57,12 @@ const columns = [
       </Link>
     ),
   }),
-  columnHelper.accessor('studentName', {
+  columnHelper.accessor('senderName', {
     header: 'From',
     cell: (info) => (
       <div className="flex flex-col">
         <span className="text-sm text-foreground">{info.getValue()}</span>
-        <span className="text-xs text-muted-foreground">{info.row.original.studentEmail}</span>
+        <span className="text-xs text-muted-foreground">{info.row.original.senderEmail}</span>
       </div>
     ),
   }),

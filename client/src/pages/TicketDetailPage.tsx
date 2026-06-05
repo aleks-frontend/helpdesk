@@ -1,23 +1,29 @@
 import { useParams, Link } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { TicketStatus, TicketCategory } from 'core'
+import { TicketStatus, TicketCategory, createReplySchema } from 'core'
 import api from '@/lib/api'
 
-type MessageSender = 'ai' | 'agent' | 'student'
+type SenderType = 'customer' | 'agent' | 'ai'
 
-interface Message {
-  id: string
+interface Reply {
+  id: number
   body: string
-  sender: MessageSender
+  senderType: SenderType
+  user: { id: string; name: string } | null
   createdAt: string
 }
 
@@ -29,8 +35,8 @@ interface Agent {
 
 interface TicketDetail {
   id: string
-  studentEmail: string
-  studentName: string
+  senderEmail: string
+  senderName: string
   subject: string
   body: string
   status: TicketStatus
@@ -39,7 +45,6 @@ interface TicketDetail {
   assignedAgent: Agent | null
   createdAt: string
   updatedAt: string
-  messages: Message[]
 }
 
 type UpdatePayload = {
@@ -48,30 +53,32 @@ type UpdatePayload = {
   category?: TicketCategory
 }
 
-function senderLabel(sender: MessageSender) {
-  if (sender === 'ai') return 'AI'
-  if (sender === 'agent') return 'Agent'
-  return 'Student'
+type ReplyFormValues = z.infer<typeof createReplySchema>
+
+function replyLabel(reply: Reply, senderName: string): string {
+  if (reply.senderType === 'ai') return 'AI'
+  if (reply.senderType === 'agent') return reply.user?.name ?? 'Agent'
+  return senderName
 }
 
-function MessageBubble({ message }: { message: Message }) {
-  const isStudent = message.sender === 'student'
+function ReplyBubble({ reply, senderName }: { reply: Reply; senderName: string }) {
+  const isCustomer = reply.senderType === 'customer'
   return (
-    <div className={`flex flex-col gap-1 ${isStudent ? 'items-start' : 'items-end'}`}>
-      <span className="text-xs text-muted-foreground">{senderLabel(message.sender)}</span>
+    <div className={`flex flex-col gap-1 ${isCustomer ? 'items-start' : 'items-end'}`}>
+      <span className="text-xs text-muted-foreground">{replyLabel(reply, senderName)}</span>
       <div
         className={`max-w-prose rounded-lg px-4 py-2.5 text-sm whitespace-pre-wrap ${
-          isStudent
+          isCustomer
             ? 'bg-muted text-foreground'
-            : message.sender === 'ai'
+            : reply.senderType === 'ai'
               ? 'bg-primary/10 text-foreground'
               : 'bg-primary text-primary-foreground'
         }`}
       >
-        {message.body}
+        {reply.body}
       </div>
       <span className="text-xs text-muted-foreground">
-        {new Date(message.createdAt).toLocaleString()}
+        {new Date(reply.createdAt).toLocaleString()}
       </span>
     </div>
   )
@@ -107,6 +114,12 @@ export default function TicketDetailPage() {
     enabled: !!id,
   })
 
+  const { data: replies = [] } = useQuery({
+    queryKey: ['replies', id],
+    queryFn: () => api.get<Reply[]>(`/tickets/${id}/replies`).then((r) => r.data),
+    enabled: !!id,
+  })
+
   const { data: agentsData } = useQuery({
     queryKey: ['agents'],
     queryFn: () => api.get<{ users: Agent[] }>('/users/agents').then((r) => r.data),
@@ -117,6 +130,26 @@ export default function TicketDetailPage() {
     mutationFn: (payload: UpdatePayload) =>
       api.patch(`/tickets/${id}`, payload).then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
+  })
+
+  const replyForm = useForm<ReplyFormValues>({
+    resolver: zodResolver(createReplySchema),
+    defaultValues: { body: '' },
+  })
+
+  const replyMutation = useMutation({
+    mutationFn: (values: ReplyFormValues) =>
+      api.post(`/tickets/${id}/replies`, values).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['replies', id] })
+      replyForm.reset()
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        'Failed to send reply'
+      replyForm.setError('root', { message })
+    },
   })
 
   function handleAssign(value: string | null) {
@@ -164,8 +197,8 @@ export default function TicketDetailPage() {
             <CardContent className="space-y-1.5 text-sm">
               <p>
                 <span className="text-muted-foreground">From: </span>
-                <span className="font-medium">{ticket.studentName}</span>
-                <span className="text-muted-foreground"> &lt;{ticket.studentEmail}&gt;</span>
+                <span className="font-medium">{ticket.senderName}</span>
+                <span className="text-muted-foreground"> &lt;{ticket.senderEmail}&gt;</span>
               </p>
               <p className="text-muted-foreground">
                 Received: {new Date(ticket.createdAt).toLocaleString()}
@@ -182,18 +215,53 @@ export default function TicketDetailPage() {
             </CardContent>
           </Card>
 
-          {ticket.messages.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Conversation</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {ticket.messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
-                ))}
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Conversation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {replies.length > 0 ? (
+                replies.map((reply) => (
+                  <ReplyBubble key={reply.id} reply={reply} senderName={ticket.senderName} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No replies yet.</p>
+              )}
+
+              <form
+                id="reply-form"
+                className="space-y-2 pt-2 border-t"
+                onSubmit={replyForm.handleSubmit((values) => replyMutation.mutate(values))}
+              >
+                {replyForm.formState.errors.root && (
+                  <p className="text-xs text-destructive">
+                    {replyForm.formState.errors.root.message}
+                  </p>
+                )}
+                <Textarea
+                  placeholder="Write a reply…"
+                  rows={3}
+                  aria-invalid={!!replyForm.formState.errors.body}
+                  {...replyForm.register('body')}
+                />
+                {replyForm.formState.errors.body && (
+                  <p className="text-xs text-destructive">
+                    {replyForm.formState.errors.body.message}
+                  </p>
+                )}
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    form="reply-form"
+                    size="sm"
+                    disabled={replyMutation.isPending}
+                  >
+                    {replyMutation.isPending ? 'Sending…' : 'Send reply'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>

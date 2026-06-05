@@ -15,8 +15,8 @@ const mockGet = vi.mocked(api.get)
 const TICKETS = [
   {
     id: '1',
-    studentEmail: 'alice@university.edu',
-    studentName: 'Alice Smith',
+    senderEmail: 'alice@university.edu',
+    senderName: 'Alice Smith',
     subject: 'Cannot access course materials',
     status: TicketStatus.open,
     category: TicketCategory.technical,
@@ -24,8 +24,8 @@ const TICKETS = [
   },
   {
     id: '2',
-    studentEmail: 'bob@university.edu',
-    studentName: 'Bob Jones',
+    senderEmail: 'bob@university.edu',
+    senderName: 'Bob Jones',
     subject: 'Refund request for March',
     status: TicketStatus.resolved,
     category: TicketCategory.refund,
@@ -253,7 +253,7 @@ describe('TicketsPage — sorting', () => {
     )
   })
 
-  it('clicking "From" header sorts by studentName', async () => {
+  it('clicking "From" header sorts by senderName', async () => {
     mockGet.mockResolvedValue(ticketResponse())
     const user = userEvent.setup()
 
@@ -265,7 +265,7 @@ describe('TicketsPage — sorting', () => {
 
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith('/tickets', {
-        params: expect.objectContaining({ sortBy: 'studentName', sortOrder: 'asc' }),
+        params: expect.objectContaining({ sortBy: 'senderName', sortOrder: 'asc' }),
       }),
     )
   })

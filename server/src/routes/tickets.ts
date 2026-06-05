@@ -5,6 +5,7 @@ import { Role } from '../generated/prisma/enums.js'
 import { validateBody } from '../lib/validate-body.js'
 import { ticketQuerySchema } from '../schemas/tickets.js'
 import { updateTicketSchema } from 'core'
+import { parseUUID } from '../lib/parse-uuid.js'
 
 export const ticketsRouter = Router()
 
@@ -18,9 +19,9 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
     ...(category && { category }),
     ...(search   && {
       OR: [
-        { subject:      { contains: search, mode: 'insensitive' as const } },
-        { studentName:  { contains: search, mode: 'insensitive' as const } },
-        { studentEmail: { contains: search, mode: 'insensitive' as const } },
+        { subject:     { contains: search, mode: 'insensitive' as const } },
+        { senderName:  { contains: search, mode: 'insensitive' as const } },
+        { senderEmail: { contains: search, mode: 'insensitive' as const } },
       ],
     }),
   }
@@ -29,8 +30,8 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
     prisma.ticket.findMany({
       select: {
         id: true,
-        studentEmail: true,
-        studentName: true,
+        senderEmail: true,
+        senderName: true,
         subject: true,
         status: true,
         category: true,
@@ -47,19 +48,13 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
   res.json({ tickets, total, page, pageSize })
 })
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 ticketsRouter.get('/:id', requireAuth, async (req, res) => {
-  const id = String(req.params.id)
-  if (!UUID_RE.test(id)) {
-    res.status(400).json({ error: 'Invalid ticket ID' })
-    return
-  }
+  const id = parseUUID(req.params.id, res, 'ticket ID')
+  if (!id) return
 
   const ticket = await prisma.ticket.findUnique({
     where: { id },
     include: {
-      messages: { orderBy: { createdAt: 'asc' } },
       assignedAgent: { select: { id: true, name: true, email: true } },
     },
   })
@@ -73,11 +68,8 @@ ticketsRouter.get('/:id', requireAuth, async (req, res) => {
 })
 
 ticketsRouter.patch('/:id', requireAuth, async (req, res) => {
-  const id = String(req.params.id)
-  if (!UUID_RE.test(id)) {
-    res.status(400).json({ error: 'Invalid ticket ID' })
-    return
-  }
+  const id = parseUUID(req.params.id, res, 'ticket ID')
+  if (!id) return
 
   const data = validateBody(updateTicketSchema, req.body, res)
   if (!data) return
@@ -109,3 +101,4 @@ ticketsRouter.patch('/:id', requireAuth, async (req, res) => {
 
   res.status(204).send()
 })
+

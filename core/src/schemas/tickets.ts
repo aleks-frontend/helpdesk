@@ -35,3 +35,17 @@ export const updateTicketSchema = z.object({
 })
 
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>
+
+export const SenderType = {
+  customer: 'customer',
+  agent: 'agent',
+  ai: 'ai',
+} as const
+
+export type SenderType = (typeof SenderType)[keyof typeof SenderType]
+
+export const createReplySchema = z.object({
+  body: z.string().min(1, 'Reply cannot be empty').max(10000),
+})
+
+export type CreateReplyInput = z.infer<typeof createReplySchema>

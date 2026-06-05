@@ -7,7 +7,7 @@ import api from '@/lib/api'
 import { renderWrapper } from '@/test/render-with-query'
 
 vi.mock('@/lib/api', () => ({
-  default: { get: vi.fn(), patch: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
 }))
 
 vi.mock('react-router', async (importOriginal) => {
@@ -24,36 +24,22 @@ const mockPatch = vi.mocked(api.patch)
 const AGENT_1 = { id: 'agent-1', name: 'Alice Agent', email: 'alice@example.com' }
 const AGENT_2 = { id: 'agent-2', name: 'Bob Agent', email: 'bob@example.com' }
 
-type Sender = 'ai' | 'agent' | 'student'
-type Message = { id: string; body: string; sender: Sender; createdAt: string }
+type SenderType = 'ai' | 'agent' | 'customer'
+type Reply = { id: number; body: string; senderType: SenderType; user: { id: string; name: string } | null; createdAt: string }
 type Agent = { id: string; name: string; email: string }
 
-const BASE_TICKET: {
-  id: string
-  studentEmail: string
-  studentName: string
-  subject: string
-  body: string
-  status: TicketStatus
-  category: TicketCategory
-  assignedAgentId: string | null
-  assignedAgent: Agent | null
-  createdAt: string
-  updatedAt: string
-  messages: Message[]
-} = {
+const BASE_TICKET = {
   id: 'ticket-123',
-  studentEmail: 'student@university.edu',
-  studentName: 'Jane Student',
+  senderEmail: 'student@university.edu',
+  senderName: 'Jane Student',
   subject: 'Cannot access course materials',
   body: 'Hi, I have been trying to access the course materials for the past two days but I keep getting an error.',
   status: TicketStatus.open,
   category: TicketCategory.technical,
-  assignedAgentId: null,
-  assignedAgent: null,
+  assignedAgentId: null as string | null,
+  assignedAgent: null as Agent | null,
   createdAt: '2026-05-28T10:00:00.000Z',
   updatedAt: '2026-05-28T11:00:00.000Z',
-  messages: [],
 }
 
 function ticketResponse(overrides: Partial<typeof BASE_TICKET> = {}) {
@@ -62,6 +48,18 @@ function ticketResponse(overrides: Partial<typeof BASE_TICKET> = {}) {
 
 function agentsResponse(agents = [AGENT_1, AGENT_2]) {
   return { data: { users: agents } }
+}
+
+function repliesResponse(replies: Reply[] = []) {
+  return { data: replies }
+}
+
+function defaultGet(replies: Reply[] = []) {
+  return (url: string) => {
+    if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse())
+    if (url === '/tickets/ticket-123/replies') return Promise.resolve(repliesResponse(replies))
+    return Promise.resolve(agentsResponse())
+  }
 }
 
 beforeEach(() => {
@@ -84,6 +82,7 @@ describe('TicketDetailPage', () => {
     it('shows error message when ticket query fails', async () => {
       mockGet.mockImplementation((url: string) => {
         if (url === '/tickets/ticket-123') return Promise.reject(new Error('Failed to fetch ticket'))
+        if (url === '/tickets/ticket-123/replies') return Promise.resolve(repliesResponse())
         return agentsResponse() as any
       })
 
@@ -98,10 +97,7 @@ describe('TicketDetailPage', () => {
 
   describe('ticket details', () => {
     beforeEach(() => {
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse())
-        return Promise.resolve(agentsResponse())
-      })
+      mockGet.mockImplementation(defaultGet())
     })
 
     it('renders ticket subject', async () => {
@@ -128,7 +124,7 @@ describe('TicketDetailPage', () => {
       expect(screen.getByText('technical')).toBeInTheDocument()
     })
 
-    it('renders student name and email', async () => {
+    it('renders sender name and email', async () => {
       render(<TicketDetailPage />, { wrapper: renderWrapper })
 
       await waitFor(() => screen.getByText('Jane Student'))
@@ -165,84 +161,82 @@ describe('TicketDetailPage', () => {
     })
   })
 
-  describe('conversation / messages', () => {
-    it('does not render conversation card when messages array is empty', async () => {
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse({ messages: [] }))
-        return Promise.resolve(agentsResponse())
-      })
-
-      render(<TicketDetailPage />, { wrapper: renderWrapper })
-
-      await waitFor(() => screen.getByText('Original message'))
-
-      expect(screen.queryByText('Conversation')).not.toBeInTheDocument()
-    })
-
-    it('renders conversation card when messages exist', async () => {
-      const messages = [
-        {
-          id: 'msg-1',
-          body: 'Hello, I need help with my account.',
-          sender: 'student' as const,
-          createdAt: '2026-05-28T10:30:00.000Z',
-        },
-        {
-          id: 'msg-2',
-          body: 'Sure, I can help you with that.',
-          sender: 'agent' as const,
-          createdAt: '2026-05-28T11:00:00.000Z',
-        },
-      ]
-
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse({ messages }))
-        return Promise.resolve(agentsResponse())
-      })
+  describe('conversation / replies', () => {
+    it('shows "No replies yet." when replies array is empty', async () => {
+      mockGet.mockImplementation(defaultGet([]))
 
       render(<TicketDetailPage />, { wrapper: renderWrapper })
 
       await waitFor(() => screen.getByText('Conversation'))
 
       expect(screen.getByText('Conversation')).toBeInTheDocument()
-      expect(screen.getByText('Hello, I need help with my account.')).toBeInTheDocument()
-      expect(screen.getByText('Sure, I can help you with that.')).toBeInTheDocument()
+      expect(screen.getByText('No replies yet.')).toBeInTheDocument()
     })
 
-    it('renders correct sender labels in message bubbles', async () => {
-      const messages = [
+    it('renders reply bubbles when replies exist', async () => {
+      const replies: Reply[] = [
         {
-          id: 'msg-1',
-          body: 'Student message',
-          sender: 'student' as const,
+          id: 1,
+          body: 'Hello, I need help with my account.',
+          senderType: 'customer',
+          user: null,
           createdAt: '2026-05-28T10:30:00.000Z',
         },
         {
-          id: 'msg-2',
-          body: 'AI reply',
-          sender: 'ai' as const,
-          createdAt: '2026-05-28T10:31:00.000Z',
-        },
-        {
-          id: 'msg-3',
-          body: 'Agent message',
-          sender: 'agent' as const,
-          createdAt: '2026-05-28T10:32:00.000Z',
+          id: 2,
+          body: 'Sure, I can help you with that.',
+          senderType: 'agent',
+          user: { id: 'agent-1', name: 'Alice Agent' },
+          createdAt: '2026-05-28T11:00:00.000Z',
         },
       ]
 
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse({ messages }))
-        return Promise.resolve(agentsResponse())
-      })
+      mockGet.mockImplementation(defaultGet(replies))
 
       render(<TicketDetailPage />, { wrapper: renderWrapper })
 
       await waitFor(() => screen.getByText('Conversation'))
 
-      expect(screen.getByText('Student')).toBeInTheDocument()
+      expect(screen.getByText('Hello, I need help with my account.')).toBeInTheDocument()
+      expect(screen.getByText('Sure, I can help you with that.')).toBeInTheDocument()
+    })
+
+    it('renders correct sender labels — customer shows ticket senderName, agent shows user name', async () => {
+      const replies: Reply[] = [
+        {
+          id: 1,
+          body: 'Customer message',
+          senderType: 'customer',
+          user: null,
+          createdAt: '2026-05-28T10:30:00.000Z',
+        },
+        {
+          id: 2,
+          body: 'AI reply',
+          senderType: 'ai',
+          user: null,
+          createdAt: '2026-05-28T10:31:00.000Z',
+        },
+        {
+          id: 3,
+          body: 'Agent message',
+          senderType: 'agent',
+          user: { id: 'agent-1', name: 'Alice Agent' },
+          createdAt: '2026-05-28T10:32:00.000Z',
+        },
+      ]
+
+      mockGet.mockImplementation(defaultGet(replies))
+
+      render(<TicketDetailPage />, { wrapper: renderWrapper })
+
+      await waitFor(() => screen.getByText('Conversation'))
+
+      // Customer label is the ticket's senderName — appears in header + bubble label
+      expect(screen.getAllByText('Jane Student').length).toBeGreaterThanOrEqual(2)
       expect(screen.getByText('AI')).toBeInTheDocument()
-      expect(screen.getByText('Agent')).toBeInTheDocument()
+      // Agent label is the user's name
+      expect(screen.getByText('Alice Agent')).toBeInTheDocument()
     })
   })
 
@@ -251,6 +245,7 @@ describe('TicketDetailPage', () => {
       mockGet.mockImplementation((url: string) => {
         if (url === '/tickets/ticket-123')
           return Promise.resolve(ticketResponse({ assignedAgentId: null, assignedAgent: null }))
+        if (url === '/tickets/ticket-123/replies') return Promise.resolve(repliesResponse())
         return Promise.resolve(agentsResponse())
       })
 
@@ -267,6 +262,7 @@ describe('TicketDetailPage', () => {
           return Promise.resolve(
             ticketResponse({ assignedAgentId: AGENT_1.id, assignedAgent: AGENT_1 }),
           )
+        if (url === '/tickets/ticket-123/replies') return Promise.resolve(repliesResponse())
         return Promise.resolve(agentsResponse())
       })
 
@@ -279,10 +275,7 @@ describe('TicketDetailPage', () => {
     })
 
     it('fires PATCH mutation when a new agent is selected', async () => {
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse())
-        return Promise.resolve(agentsResponse())
-      })
+      mockGet.mockImplementation(defaultGet())
       mockPatch.mockResolvedValue({ data: {} })
 
       const user = userEvent.setup()
@@ -304,10 +297,7 @@ describe('TicketDetailPage', () => {
     })
 
     it('select is disabled while mutation is in flight', async () => {
-      mockGet.mockImplementation((url: string) => {
-        if (url === '/tickets/ticket-123') return Promise.resolve(ticketResponse())
-        return Promise.resolve(agentsResponse())
-      })
+      mockGet.mockImplementation(defaultGet())
       // Never resolves — keeps mutation in pending state
       mockPatch.mockReturnValue(new Promise(() => {}))
 
