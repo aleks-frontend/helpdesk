@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import {
   Dialog,
   DialogContent,
@@ -55,7 +56,7 @@ export function DeleteUserDialog({ user, open, onOpenChange }: Props) {
         <p className="text-sm text-muted-foreground">
           Are you sure you want to delete <span className="font-medium text-foreground">{user.name}</span>? This action cannot be undone.
         </p>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <DialogFooter showCloseButton>
           <Button
             variant="destructive"

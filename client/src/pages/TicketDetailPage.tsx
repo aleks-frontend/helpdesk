@@ -1,20 +1,16 @@
 import { useParams, Link } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { TicketStatus, TicketCategory, createReplySchema } from 'core'
+import { TicketStatus, TicketCategory } from 'core'
+import { ReplyForm } from '@/components/ReplyForm'
 import api from '@/lib/api'
 
 type SenderType = 'customer' | 'agent' | 'ai'
@@ -52,8 +48,6 @@ type UpdatePayload = {
   status?: TicketStatus
   category?: TicketCategory
 }
-
-type ReplyFormValues = z.infer<typeof createReplySchema>
 
 function replyLabel(reply: Reply, senderName: string): string {
   if (reply.senderType === 'ai') return 'AI'
@@ -132,26 +126,6 @@ export default function TicketDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
   })
 
-  const replyForm = useForm<ReplyFormValues>({
-    resolver: zodResolver(createReplySchema),
-    defaultValues: { body: '' },
-  })
-
-  const replyMutation = useMutation({
-    mutationFn: (values: ReplyFormValues) =>
-      api.post(`/tickets/${id}/replies`, values).then((r) => r.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['replies', id] })
-      replyForm.reset()
-    },
-    onError: (err: unknown) => {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-        'Failed to send reply'
-      replyForm.setError('root', { message })
-    },
-  })
-
   function handleAssign(value: string | null) {
     updateMutation.mutate({ assignedAgentId: value || null })
   }
@@ -228,38 +202,7 @@ export default function TicketDetailPage() {
                 <p className="text-sm text-muted-foreground">No replies yet.</p>
               )}
 
-              <form
-                id="reply-form"
-                className="space-y-2 pt-2 border-t"
-                onSubmit={replyForm.handleSubmit((values) => replyMutation.mutate(values))}
-              >
-                {replyForm.formState.errors.root && (
-                  <p className="text-xs text-destructive">
-                    {replyForm.formState.errors.root.message}
-                  </p>
-                )}
-                <Textarea
-                  placeholder="Write a reply…"
-                  rows={3}
-                  aria-invalid={!!replyForm.formState.errors.body}
-                  {...replyForm.register('body')}
-                />
-                {replyForm.formState.errors.body && (
-                  <p className="text-xs text-destructive">
-                    {replyForm.formState.errors.body.message}
-                  </p>
-                )}
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    form="reply-form"
-                    size="sm"
-                    disabled={replyMutation.isPending}
-                  >
-                    {replyMutation.isPending ? 'Sending…' : 'Send reply'}
-                  </Button>
-                </div>
-              </form>
+              <ReplyForm ticketId={id!} />
             </CardContent>
           </Card>
         </div>

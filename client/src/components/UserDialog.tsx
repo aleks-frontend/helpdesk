@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Role, roleSchema } from 'core'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -124,12 +125,12 @@ export function UserDialog({ open, onOpenChange, user }: Props) {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="user-name">Name</Label>
             <Input id="user-name" placeholder="Jane Smith" aria-invalid={!!errors.name} {...register('name')} />
-            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="user-email">Email</Label>
             <Input id="user-email" type="email" placeholder="jane@example.com" aria-invalid={!!errors.email} {...register('email')} />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
           </div>
           {isEdit && (
             <div className="flex flex-col gap-1.5">
@@ -142,7 +143,7 @@ export function UserDialog({ open, onOpenChange, user }: Props) {
                 <option value={Role.agent}>{Role.agent}</option>
                 <option value={Role.admin}>{Role.admin}</option>
               </select>
-              {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+              {errors.role && <ErrorMessage>{errors.role.message}</ErrorMessage>}
             </div>
           )}
           <div className="flex flex-col gap-1.5">
@@ -154,9 +155,9 @@ export function UserDialog({ open, onOpenChange, user }: Props) {
               aria-invalid={!!errors.password}
               {...register('password')}
             />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+            {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
           </div>
-          {errors.root && <p className="text-xs text-destructive">{errors.root.message}</p>}
+          {errors.root && <ErrorMessage>{errors.root.message}</ErrorMessage>}
         </form>
         <DialogFooter showCloseButton>
           <Button type="submit" form="user-form" disabled={isSubmitting}>

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useNavigate } from 'react-router'
 import { authClient } from '../lib/auth-client'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -70,7 +71,7 @@ export default function LoginPage() {
                 {...register('email')}
               />
               {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+                <ErrorMessage>{errors.email.message}</ErrorMessage>
               )}
             </div>
 
@@ -84,7 +85,7 @@ export default function LoginPage() {
                 {...register('password')}
               />
               {errors.password && (
-                <p className="text-xs text-destructive">{errors.password.message}</p>
+                <ErrorMessage>{errors.password.message}</ErrorMessage>
               )}
             </div>
           </form>
