@@ -100,6 +100,7 @@ model Ticket {
   senderName      String
   subject         String
   body            String
+  bodyHtml        String?
   status          TicketStatus   @default(open)
   category        TicketCategory @default(general)
   assignedAgentId String?
@@ -114,6 +115,7 @@ model Ticket {
 model Reply {
   id         Int        @id @default(autoincrement())
   body       String
+  bodyHtml   String?
   senderType SenderType
   ticketId   String
   ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)

@@ -40,7 +40,7 @@ repliesRouter.post('/', requireAuth, async (req, res) => {
   }
 
   const reply = await prisma.reply.create({
-    data: { ticketId, body: data.body, senderType: 'agent', userId: req.user!.id },
+    data: { ticketId, body: data.body, bodyHtml: data.bodyHtml, senderType: 'agent', userId: req.user!.id },
     include: { user: { select: { id: true, name: true } } },
   })
 

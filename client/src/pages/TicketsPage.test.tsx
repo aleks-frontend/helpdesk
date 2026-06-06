@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TicketStatus, TicketCategory } from 'core'
@@ -33,7 +33,7 @@ const TICKETS = [
   },
 ]
 
-function ticketResponse(tickets = TICKETS, total = tickets.length) {
+function ticketResponse(tickets: any[] = TICKETS, total = tickets.length) {
   return { data: { tickets, total, page: 1, pageSize: 10 } }
 }
 

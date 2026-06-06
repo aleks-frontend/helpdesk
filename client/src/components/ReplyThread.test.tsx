@@ -21,6 +21,7 @@ const BASE_TICKET: TicketDetail = {
   senderName: 'Jane Student',
   subject: 'Cannot access course materials',
   body: 'I keep getting an error when trying to access my course materials.',
+  bodyHtml: null,
   status: TicketStatus.open,
   category: TicketCategory.technical,
   assignedAgentId: null,
@@ -73,6 +74,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'I cannot log into my account.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:15:00.000Z',
@@ -80,6 +82,7 @@ describe('ReplyThread', () => {
         {
           id: 2,
           body: 'Let me look into that for you.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: '2026-05-28T10:20:00.000Z',
@@ -101,6 +104,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Hello there.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:15:00.000Z',
@@ -121,6 +125,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Customer question here.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:15:00.000Z',
@@ -128,6 +133,7 @@ describe('ReplyThread', () => {
         {
           id: 2,
           body: 'AI generated answer.',
+          bodyHtml: null,
           senderType: 'ai',
           user: null,
           createdAt: '2026-05-28T10:16:00.000Z',
@@ -135,6 +141,7 @@ describe('ReplyThread', () => {
         {
           id: 3,
           body: 'Agent follow-up.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Bob Agent' },
           createdAt: '2026-05-28T10:17:00.000Z',
@@ -159,6 +166,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Customer message here.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:15:00.000Z',
@@ -184,6 +192,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Agent reply here.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: '2026-05-28T10:20:00.000Z',
@@ -208,6 +217,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'AI generated response.',
+          bodyHtml: null,
           senderType: 'ai',
           user: null,
           createdAt: '2026-05-28T10:18:00.000Z',
@@ -234,6 +244,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'This is an AI reply.',
+          bodyHtml: null,
           senderType: 'ai',
           user: null,
           createdAt: '2026-05-28T10:18:00.000Z',
@@ -254,6 +265,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Hello from an agent.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: '2026-05-28T10:20:00.000Z',
@@ -274,6 +286,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Agent reply without user.',
+          bodyHtml: null,
           senderType: 'agent',
           user: null,
           createdAt: '2026-05-28T10:20:00.000Z',
@@ -294,6 +307,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'Hello, I need help.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:15:00.000Z',
@@ -318,6 +332,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'A timestamped reply.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt,
@@ -341,6 +356,7 @@ describe('ReplyThread', () => {
         {
           id: 1,
           body: 'First reply.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: createdAt1,
@@ -348,6 +364,7 @@ describe('ReplyThread', () => {
         {
           id: 2,
           body: 'Second reply.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: createdAt2,

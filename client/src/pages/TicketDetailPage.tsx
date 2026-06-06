@@ -8,6 +8,7 @@ import { ReplyThread } from '@/components/ReplyThread'
 import { ReplyForm } from '@/components/ReplyForm'
 import { UpdateTicket } from '@/components/UpdateTicket'
 import { TicketDetails } from '@/components/TicketDetails'
+import { SafeHtml } from '@/components/SafeHtml'
 import api from '@/lib/api'
 
 
@@ -52,7 +53,7 @@ export default function TicketDetailPage() {
               <CardTitle className="text-base">Original message</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm whitespace-pre-wrap">{ticket.body}</p>
+              <SafeHtml html={ticket.bodyHtml} text={ticket.body} className="text-sm whitespace-pre-wrap" />
             </CardContent>
           </Card>
 

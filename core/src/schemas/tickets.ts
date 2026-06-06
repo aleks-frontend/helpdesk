@@ -21,6 +21,7 @@ export const inboundEmailSchema = z.object({
   fromName: z.string().trim().optional(),
   subject: z.string().trim().min(1, 'Subject is required.'),
   body: z.string().min(1, 'Body is required.'),
+  bodyHtml: z.string().optional(),
 })
 
 export type InboundEmailInput = z.infer<typeof inboundEmailSchema>
@@ -48,6 +49,7 @@ export interface TicketDetail {
   senderName: string
   subject: string
   body: string
+  bodyHtml: string | null
   status: TicketStatus
   category: TicketCategory
   assignedAgentId: string | null
@@ -67,6 +69,7 @@ export type SenderType = (typeof SenderType)[keyof typeof SenderType]
 export interface Reply {
   id: number
   body: string
+  bodyHtml: string | null
   senderType: SenderType
   user: { id: string; name: string } | null
   createdAt: string
@@ -74,6 +77,7 @@ export interface Reply {
 
 export const createReplySchema = z.object({
   body: z.string().min(1, 'Reply cannot be empty').max(10000),
+  bodyHtml: z.string().optional(),
 })
 
 export type CreateReplyInput = z.infer<typeof createReplySchema>

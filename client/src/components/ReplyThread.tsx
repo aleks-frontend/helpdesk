@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import type { TicketDetail, Reply } from 'core'
+import { SafeHtml } from '@/components/SafeHtml'
 
 function replyLabel(reply: Reply, senderName: string): string {
   if (reply.senderType === 'ai') return 'AI'
@@ -13,7 +14,9 @@ function ReplyBubble({ reply, senderName }: { reply: Reply; senderName: string }
   return (
     <div className={`flex flex-col gap-1 ${isCustomer ? 'items-start' : 'items-end'}`}>
       <span className="text-xs text-muted-foreground">{replyLabel(reply, senderName)}</span>
-      <div
+      <SafeHtml
+        html={reply.bodyHtml}
+        text={reply.body}
         className={`max-w-prose rounded-lg px-4 py-2.5 text-sm whitespace-pre-wrap ${
           isCustomer
             ? 'bg-muted text-foreground'
@@ -21,9 +24,7 @@ function ReplyBubble({ reply, senderName }: { reply: Reply; senderName: string }
               ? 'bg-primary/10 text-foreground'
               : 'bg-primary text-primary-foreground'
         }`}
-      >
-        {reply.body}
-      </div>
+      />
       <span className="text-xs text-muted-foreground">
         {new Date(reply.createdAt).toLocaleString()}
       </span>

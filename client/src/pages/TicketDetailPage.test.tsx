@@ -25,7 +25,7 @@ const AGENT_1 = { id: 'agent-1', name: 'Alice Agent', email: 'alice@example.com'
 const AGENT_2 = { id: 'agent-2', name: 'Bob Agent', email: 'bob@example.com' }
 
 type SenderType = 'ai' | 'agent' | 'customer'
-type Reply = { id: number; body: string; senderType: SenderType; user: { id: string; name: string } | null; createdAt: string }
+type Reply = { id: number; body: string; bodyHtml: string | null; senderType: SenderType; user: { id: string; name: string } | null; createdAt: string }
 type Agent = { id: string; name: string; email: string }
 
 const BASE_TICKET = {
@@ -34,6 +34,7 @@ const BASE_TICKET = {
   senderName: 'Jane Student',
   subject: 'Cannot access course materials',
   body: 'Hi, I have been trying to access the course materials for the past two days but I keep getting an error.',
+  bodyHtml: null,
   status: TicketStatus.open,
   category: TicketCategory.technical,
   assignedAgentId: null as string | null,
@@ -178,6 +179,7 @@ describe('TicketDetailPage', () => {
         {
           id: 1,
           body: 'Hello, I need help with my account.',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:30:00.000Z',
@@ -185,6 +187,7 @@ describe('TicketDetailPage', () => {
         {
           id: 2,
           body: 'Sure, I can help you with that.',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: '2026-05-28T11:00:00.000Z',
@@ -206,6 +209,7 @@ describe('TicketDetailPage', () => {
         {
           id: 1,
           body: 'Customer message',
+          bodyHtml: null,
           senderType: 'customer',
           user: null,
           createdAt: '2026-05-28T10:30:00.000Z',
@@ -213,6 +217,7 @@ describe('TicketDetailPage', () => {
         {
           id: 2,
           body: 'AI reply',
+          bodyHtml: null,
           senderType: 'ai',
           user: null,
           createdAt: '2026-05-28T10:31:00.000Z',
@@ -220,6 +225,7 @@ describe('TicketDetailPage', () => {
         {
           id: 3,
           body: 'Agent message',
+          bodyHtml: null,
           senderType: 'agent',
           user: { id: 'agent-1', name: 'Alice Agent' },
           createdAt: '2026-05-28T10:32:00.000Z',

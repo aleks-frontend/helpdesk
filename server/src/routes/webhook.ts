@@ -27,7 +27,7 @@ webhookRouter.post('/email', async (req, res) => {
   const data = validateBody(inboundEmailSchema, req.body, res)
   if (!data) return
 
-  const { from, fromName, subject, body } = data
+  const { from, fromName, subject, body, bodyHtml } = data
 
   const normalizedSubject = subject.replace(/^(re|fwd?):\s*/i, '').trim()
 
@@ -43,6 +43,7 @@ webhookRouter.post('/email', async (req, res) => {
     await prisma.reply.create({
       data: {
         body,
+        bodyHtml,
         senderType: 'customer',
         ticketId: existingTicket.id,
         userId: null,
@@ -58,7 +59,8 @@ webhookRouter.post('/email', async (req, res) => {
       senderName: fromName ?? from,
       subject,
       body,
-      replies: { create: { body, senderType: 'customer', userId: null } },
+      bodyHtml,
+      replies: { create: { body, bodyHtml, senderType: 'customer', userId: null } },
     },
     select: { id: true, senderEmail: true, subject: true, createdAt: true },
   })
