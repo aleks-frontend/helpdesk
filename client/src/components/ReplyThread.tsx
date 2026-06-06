@@ -1,16 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { TicketDetail } from 'core'
-
-type SenderType = 'customer' | 'agent' | 'ai'
-
-interface Reply {
-  id: number
-  body: string
-  senderType: SenderType
-  user: { id: string; name: string } | null
-  createdAt: string
-}
+import type { TicketDetail, Reply } from 'core'
 
 function replyLabel(reply: Reply, senderName: string): string {
   if (reply.senderType === 'ai') return 'AI'

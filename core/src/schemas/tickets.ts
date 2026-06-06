@@ -64,6 +64,14 @@ export const SenderType = {
 
 export type SenderType = (typeof SenderType)[keyof typeof SenderType]
 
+export interface Reply {
+  id: number
+  body: string
+  senderType: SenderType
+  user: { id: string; name: string } | null
+  createdAt: string
+}
+
 export const createReplySchema = z.object({
   body: z.string().min(1, 'Reply cannot be empty').max(10000),
 })

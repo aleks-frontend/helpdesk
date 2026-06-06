@@ -195,7 +195,7 @@ describe('TicketDetailPage', () => {
 
       render(<TicketDetailPage />, { wrapper: renderWrapper })
 
-      await waitFor(() => screen.getByText('Conversation'))
+      await waitFor(() => screen.getByText('Hello, I need help with my account.'))
 
       expect(screen.getByText('Hello, I need help with my account.')).toBeInTheDocument()
       expect(screen.getByText('Sure, I can help you with that.')).toBeInTheDocument()
@@ -230,9 +230,10 @@ describe('TicketDetailPage', () => {
 
       render(<TicketDetailPage />, { wrapper: renderWrapper })
 
-      await waitFor(() => screen.getByText('Conversation'))
+      // Wait for all three reply bubbles to appear
+      await waitFor(() => screen.getByText('Agent message'))
 
-      // Customer label is the ticket's senderName — appears in header + bubble label
+      // Customer label is the ticket's senderName — appears in the TicketDetails header and bubble label
       expect(screen.getAllByText('Jane Student').length).toBeGreaterThanOrEqual(2)
       expect(screen.getByText('AI')).toBeInTheDocument()
       // Agent label is the user's name
