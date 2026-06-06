@@ -41,6 +41,8 @@ npm run test:e2e:ui
 
 **Prefer unit tests over e2e tests.** Write component unit tests for all pages and components — they run fast, stay isolated, and catch regressions early. Only reach for e2e tests when verifying behaviour that genuinely requires a real browser, real auth session, and a running server (e.g. auth redirects, multi-step flows across client and server, webhook integration). Do not write e2e tests for things already covered by unit tests.
 
+**E2e test scope rule:** Before writing any e2e test, check what unit tests already cover for that page/component. Only write e2e tests for scenarios that unit tests structurally cannot cover: real HTTP mutations persisting to the database, auth-gated redirects with a real session, multi-page flows, and cross-cutting behaviour that spans client and server. Rendering, loading states, error states, conditional display, and prop-driven UI are unit test territory — never duplicate them in e2e.
+
 Use the **`component-unit-tester`** agent to write component unit tests. It has full knowledge of the test infrastructure, shared utilities, mocking patterns, and coverage conventions for this project.
 
 Use the **`e2e-test-writer`** agent to write e2e tests. It has full knowledge of the test infrastructure, selector strategy, auth fixture patterns, and coverage checklists.

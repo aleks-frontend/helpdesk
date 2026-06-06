@@ -40,7 +40,7 @@ test.describe('POST /webhooks/email — happy path', () => {
     const body = await response.json()
     expect(body).toHaveProperty('ticket')
     expect(body.ticket).toMatchObject({
-      studentEmail: 'student@example.com',
+      senderEmail: 'student@example.com',
       subject: 'Help with my account',
     })
     expect(typeof body.ticket.id).toBe('string')
@@ -48,7 +48,7 @@ test.describe('POST /webhooks/email — happy path', () => {
   })
 
   test('omitting fromName returns 201 and studentName falls back to the email address', async ({ request }) => {
-    const payload = validPayload()
+    const payload = validPayload({ subject: 'Help with my account — no name' })
     delete (payload as Record<string, unknown>).fromName
 
     const response = await request.post(WEBHOOK_URL, { data: payload, headers: webhookHeaders() })
@@ -57,8 +57,8 @@ test.describe('POST /webhooks/email — happy path', () => {
 
     const body = await response.json()
     expect(body.ticket).toMatchObject({
-      studentEmail: 'student@example.com',
-      subject: 'Help with my account',
+      senderEmail: 'student@example.com',
+      subject: 'Help with my account — no name',
     })
   })
 })
@@ -127,7 +127,7 @@ test.describe('POST /webhooks/email — secret enforcement', () => {
 
   test('correct X-Webhook-Secret header returns 201', async ({ request }) => {
     const response = await request.post(WEBHOOK_URL, {
-      data: validPayload(),
+      data: validPayload({ subject: 'Help with my account — secret check' }),
       headers: { 'X-Webhook-Secret': WEBHOOK_SECRET! },
     })
 

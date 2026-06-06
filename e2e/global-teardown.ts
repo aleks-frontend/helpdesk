@@ -16,7 +16,7 @@ export default async function globalTeardown() {
 
   try {
     // Truncate leaf tables first, then parent; CASCADE handles any remaining FK refs
-    await client.query('TRUNCATE "account", "session", "verification", "user" RESTART IDENTITY CASCADE')
+    await client.query('TRUNCATE "reply", "ticket", "account", "session", "verification", "user" RESTART IDENTITY CASCADE')
     console.log('Test database cleared')
   } finally {
     await client.end()
