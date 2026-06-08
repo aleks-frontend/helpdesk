@@ -120,10 +120,16 @@ usersRouter.delete('/:id', requireAuth, requireRole(Role.admin), async (req, res
     return
   }
 
-  await prisma.user.update({
-    where: { id },
-    data: { deletedAt: new Date(), updatedAt: new Date() },
-  })
+  await prisma.$transaction([
+    prisma.ticket.updateMany({
+      where: { assignedAgentId: id },
+      data: { assignedAgentId: null },
+    }),
+    prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date(), updatedAt: new Date() },
+    }),
+  ])
 
   res.status(204).send()
 })
