@@ -22,7 +22,7 @@ export function ReplyForm({ ticketId }: Props) {
     defaultValues: { body: '' },
   })
 
-  const mutation = useMutation({
+  const sendMutation = useMutation({
     mutationFn: (values: ReplyFormValues) =>
       api.post(`/tickets/${ticketId}/replies`, values).then((r) => r.data),
     onSuccess: () => {
@@ -37,11 +37,21 @@ export function ReplyForm({ ticketId }: Props) {
     },
   })
 
+  const polishMutation = useMutation({
+    mutationFn: (body: string) =>
+      api.post<{ body: string }>(`/tickets/${ticketId}/replies/polish`, { body }).then((r) => r.data),
+    onSuccess: ({ body }) => {
+      form.setValue('body', body, { shouldDirty: true })
+    },
+  })
+
+  const isBusy = sendMutation.isPending || polishMutation.isPending
+
   return (
     <form
       id="reply-form"
       className="space-y-2 pt-2 border-t"
-      onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
+      onSubmit={form.handleSubmit((values) => sendMutation.mutate(values))}
     >
       {form.formState.errors.root && (
         <ErrorMessage>{form.formState.errors.root.message}</ErrorMessage>
@@ -55,9 +65,24 @@ export function ReplyForm({ ticketId }: Props) {
       {form.formState.errors.body && (
         <ErrorMessage>{form.formState.errors.body.message}</ErrorMessage>
       )}
-      <div className="flex justify-end">
-        <Button type="submit" form="reply-form" size="sm" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Sending…' : 'Send reply'}
+      {polishMutation.error && (
+        <ErrorMessage>
+          {(polishMutation.error as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+            'Failed to polish reply'}
+        </ErrorMessage>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isBusy}
+          onClick={() => polishMutation.mutate(form.getValues('body'))}
+        >
+          {polishMutation.isPending ? 'Polishing…' : 'Polish'}
+        </Button>
+        <Button type="submit" form="reply-form" size="sm" disabled={isBusy}>
+          {sendMutation.isPending ? 'Sending…' : 'Send reply'}
         </Button>
       </div>
     </form>
