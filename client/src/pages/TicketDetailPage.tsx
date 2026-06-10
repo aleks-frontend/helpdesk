@@ -9,6 +9,7 @@ import { ReplyForm } from '@/components/ReplyForm'
 import { UpdateTicket } from '@/components/UpdateTicket'
 import { TicketDetails } from '@/components/TicketDetails'
 import { SafeHtml } from '@/components/SafeHtml'
+import { TicketSummary } from '@/components/TicketSummary'
 import api from '@/lib/api'
 
 
@@ -56,6 +57,8 @@ export default function TicketDetailPage() {
               <SafeHtml html={ticket.bodyHtml} text={ticket.body} className="text-sm whitespace-pre-wrap" />
             </CardContent>
           </Card>
+
+          <TicketSummary ticketId={id!} />
 
           <Card>
             <CardHeader>

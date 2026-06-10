@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
 import { requireAuth } from '../middleware/require-auth.js'
 import { prisma } from '../lib/prisma.js'
 import { Role } from '../generated/prisma/enums.js'
@@ -65,6 +67,56 @@ ticketsRouter.get('/:id', requireAuth, async (req, res) => {
   }
 
   res.json(ticket)
+})
+
+ticketsRouter.post('/:id/summarize', requireAuth, async (req, res) => {
+  const id = parseUUID(req.params.id, res, 'ticket ID')
+  if (!id) return
+
+  const ticket = await prisma.ticket.findUnique({ where: { id } })
+  if (!ticket) {
+    res.status(404).json({ error: 'Ticket not found' })
+    return
+  }
+
+  const replies = await prisma.reply.findMany({
+    where: { ticketId: id },
+    orderBy: { createdAt: 'asc' },
+    include: { user: { select: { name: true } } },
+  })
+
+  const conversationLines = replies.map((r) => {
+    const label =
+      r.senderType === 'ai' ? 'AI' : r.senderType === 'agent' ? (r.user?.name ?? 'Agent') : ticket.senderName
+    return `${label}: ${r.body}`
+  })
+
+  const prompt = [
+    `Ticket subject: ${ticket.subject}`,
+    `From: ${ticket.senderName} <${ticket.senderEmail}>`,
+    `Original message:\n${ticket.body}`,
+    conversationLines.length > 0 ? `\nConversation:\n${conversationLines.join('\n\n')}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+
+  let summary: string
+  try {
+    const result = await generateText({
+      model: openai('gpt-4.1-nano'),
+      system:
+        'You are a customer support assistant. Summarize the support ticket and conversation history in 2–4 concise bullet points. Cover: the customer\'s issue, any steps taken, and the current status. Be brief and factual. Return only the bullet points, no preamble.',
+      prompt,
+    })
+    summary = result.text
+  } catch (err) {
+    console.error('[summarize] OpenAI error:', err)
+    const message = err instanceof Error ? err.message : 'AI request failed'
+    res.status(502).json({ error: message })
+    return
+  }
+
+  res.json({ summary })
 })
 
 ticketsRouter.patch('/:id', requireAuth, async (req, res) => {
