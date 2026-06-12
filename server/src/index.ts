@@ -4,6 +4,7 @@ import type { ErrorRequestHandler } from 'express'
 import { rateLimit } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth.js'
+import { startQueue, stopQueue } from './lib/queue.js'
 import { requireAuth } from './middleware/require-auth.js'
 import { usersRouter } from './routes/users.js'
 import { webhookRouter } from './routes/webhook.js'
@@ -48,6 +49,25 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 }
 app.use(errorHandler)
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`)
+async function start() {
+  await startQueue()
+
+  const server = app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`)
+  })
+
+  const shutdown = async () => {
+    console.log('Shutting down...')
+    server.close()
+    await stopQueue()
+    process.exit(0)
+  }
+
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
+}
+
+start().catch((err) => {
+  console.error('Failed to start server:', err)
+  process.exit(1)
 })
