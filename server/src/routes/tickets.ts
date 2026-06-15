@@ -3,6 +3,7 @@ import { generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { requireAuth } from '../middleware/require-auth.js'
 import { prisma } from '../lib/prisma.js'
+import { Prisma } from '../generated/prisma/client.js'
 import { Role } from '../generated/prisma/enums.js'
 import { validateBody } from '../lib/validate-body.js'
 import { ticketQuerySchema } from '../schemas/tickets.js'
@@ -16,14 +17,15 @@ ticketsRouter.get('/', requireAuth, async (req, res) => {
   if (!params) return
   const { sortBy, sortOrder, status, category, search, page, pageSize } = params
 
-  const where = {
+  const where: Prisma.TicketWhereInput = {
+    NOT: { status: { in: ['new', 'processing'] } },
     ...(status   && { status }),
     ...(category && { category }),
     ...(search   && {
       OR: [
-        { subject:     { contains: search, mode: 'insensitive' as const } },
-        { senderName:  { contains: search, mode: 'insensitive' as const } },
-        { senderEmail: { contains: search, mode: 'insensitive' as const } },
+        { subject:     { contains: search, mode: 'insensitive' } },
+        { senderName:  { contains: search, mode: 'insensitive' } },
+        { senderEmail: { contains: search, mode: 'insensitive' } },
       ],
     }),
   }

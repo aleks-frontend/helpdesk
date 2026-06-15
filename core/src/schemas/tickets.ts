@@ -1,12 +1,20 @@
 import { z } from 'zod'
 
 export const TicketStatus = {
-  open: 'open',
-  resolved: 'resolved',
-  closed: 'closed',
+  new:        'new',
+  processing: 'processing',
+  open:       'open',
+  resolved:   'resolved',
+  closed:     'closed',
 } as const
 
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+const AGENT_SETTABLE_STATUSES = [
+  TicketStatus.open,
+  TicketStatus.resolved,
+  TicketStatus.closed,
+] as const
 
 export const TicketCategory = {
   general: 'general',
@@ -26,12 +34,11 @@ export const inboundEmailSchema = z.object({
 
 export type InboundEmailInput = z.infer<typeof inboundEmailSchema>
 
-const STATUS_VALUES = Object.values(TicketStatus) as [TicketStatus, ...TicketStatus[]]
 const CATEGORY_VALUES = Object.values(TicketCategory) as [TicketCategory, ...TicketCategory[]]
 
 export const updateTicketSchema = z.object({
   assignedAgentId: z.string().min(1).nullable().optional(),
-  status: z.enum(STATUS_VALUES).optional(),
+  status: z.enum(AGENT_SETTABLE_STATUSES).optional(),
   category: z.enum(CATEGORY_VALUES).optional(),
 })
 

@@ -35,7 +35,7 @@ webhookRouter.post('/email', async (req, res) => {
   const existingTicket = await prisma.ticket.findFirst({
     where: {
       senderEmail: from,
-      status: 'open',
+      status: { in: ['new', 'processing', 'open'] },
       subject: { equals: normalizedSubject, mode: 'insensitive' },
     },
   })
@@ -66,7 +66,7 @@ webhookRouter.post('/email', async (req, res) => {
     select: { id: true, senderEmail: true, subject: true, createdAt: true },
   })
 
-  sendClassifyJob({ id: ticket.id, subject, body }).catch(console.error)
+  sendClassifyJob({ id: ticket.id, subject, body, senderName: fromName ?? from }).catch(console.error)
 
   res.status(201).json({ ticket })
 })

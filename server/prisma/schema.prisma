@@ -77,6 +77,8 @@ model Verification {
 }
 
 enum TicketStatus {
+  new
+  processing
   open
   resolved
   closed
@@ -101,7 +103,7 @@ model Ticket {
   subject         String
   body            String
   bodyHtml        String?
-  status          TicketStatus   @default(open)
+  status          TicketStatus   @default(new)
   category        TicketCategory @default(general)
   assignedAgentId String?
   assignedAgent   User?          @relation(fields: [assignedAgentId], references: [id])
