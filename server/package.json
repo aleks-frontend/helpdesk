@@ -8,7 +8,8 @@
     "build": "tsc --outDir dist",
     "migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:ai-agent": "tsx prisma/seed-ai-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",

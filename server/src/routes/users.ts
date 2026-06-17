@@ -6,12 +6,13 @@ import { prisma } from '../lib/prisma.js'
 import { Role } from '../generated/prisma/enums.js'
 import { createUserSchema, updateUserSchema } from 'core'
 import { validateBody } from '../lib/validate-body.js'
+import { AI_AGENT_EMAIL } from '../lib/ai-agent.js'
 
 export const usersRouter = Router()
 
 usersRouter.get('/agents', requireAuth, async (_req, res) => {
   const users = await prisma.user.findMany({
-    where: { role: Role.agent, deletedAt: null },
+    where: { role: Role.agent, deletedAt: null, email: { not: AI_AGENT_EMAIL } },
     select: { id: true, name: true, email: true },
     orderBy: { name: 'asc' },
   })
@@ -20,7 +21,7 @@ usersRouter.get('/agents', requireAuth, async (_req, res) => {
 
 usersRouter.get('/', requireAuth, requireRole(Role.admin), async (_req, res) => {
   const users = await prisma.user.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, email: { not: AI_AGENT_EMAIL } },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   })

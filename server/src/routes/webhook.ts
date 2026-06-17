@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'crypto'
 import { prisma } from '../lib/prisma.js'
 import { validateBody } from '../lib/validate-body.js'
 import { sendClassifyJob } from '../lib/queue.js'
+import { getAiAgentId } from '../lib/ai-agent.js'
 import { inboundEmailSchema } from 'core'
 
 export const webhookRouter = Router()
@@ -54,6 +55,8 @@ webhookRouter.post('/email', async (req, res) => {
     return
   }
 
+  const aiAgentId = await getAiAgentId()
+
   const ticket = await prisma.ticket.create({
     data: {
       senderEmail: from,
@@ -61,6 +64,7 @@ webhookRouter.post('/email', async (req, res) => {
       subject,
       body,
       bodyHtml,
+      assignedAgentId: aiAgentId,
       replies: { create: { body, bodyHtml, senderType: 'customer', userId: null } },
     },
     select: { id: true, senderEmail: true, subject: true, createdAt: true },

@@ -32,6 +32,14 @@ const KNOWLEDGE_BASE_PATH = join(
   'knowledge-base.md'
 )
 
+/** Marks a ticket as open and removes the AI agent assignment so a human agent can pick it up. */
+async function escalateTicket(ticketId: string): Promise<void> {
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { status: 'open', assignedAgentId: null },
+  })
+}
+
 export async function sendClassifyJob(ticket: {
   id: string
   subject: string
@@ -72,7 +80,7 @@ export async function startQueue(): Promise<void> {
       })).text
     } catch (err) {
       console.error(`[classify] AI error for ticket ${ticketId} — escalating:`, err)
-      await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'open' } })
+      await escalateTicket(ticketId)
       return
     }
 
@@ -80,7 +88,7 @@ export async function startQueue(): Promise<void> {
     const category = Object.values(TicketCategory).find((c) => c === raw)
     if (!category) {
       console.warn(`[classify] Unexpected category "${raw}" for ticket ${ticketId} — escalating`)
-      await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'open' } })
+      await escalateTicket(ticketId)
       return
     }
 
@@ -105,7 +113,7 @@ export async function startQueue(): Promise<void> {
       knowledgeBase = await readFile(KNOWLEDGE_BASE_PATH, 'utf-8')
     } catch (err) {
       console.error('[auto-resolve] Failed to read knowledge base — escalating:', err)
-      await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'open' } })
+      await escalateTicket(ticketId)
       return
     }
 
@@ -114,20 +122,31 @@ export async function startQueue(): Promise<void> {
       text = (await generateText({
         model: openai('gpt-4.1-nano'),
         system: [
-          'You are a customer support assistant for Code with Mosh.',
-          'Knowledge base:\n\n' + knowledgeBase,
+          'You are an automated triage assistant for Code with Mosh customer support.',
           '',
-          "If you can fully answer the customer's question using ONLY the knowledge base:",
-          `  Write a professional, clear, and empathetic reply addressing the customer by their first name (${customerFirstName}).`,
-          '  End with this exact signature on its own line: "Code with Mosh Support"',
-          '  Use plain text only.',
-          'If you cannot answer from the knowledge base: respond with exactly: ESCALATE',
+          '## Step 1 — Escalation check (always run this first)',
+          'Respond with exactly: ESCALATE',
+          'if ANY of the following are true:',
+          '  - The customer mentions a chargeback, charge dispute, or contacting their bank/card company.',
+          '  - The customer threatens legal action, mentions a lawyer, or threatens to report to a consumer agency.',
+          '  - The customer requests a refund more than 30 days after purchase.',
+          '  - The message involves account security (hacking, unauthorised access, identity theft).',
+          '  - The topic is NOT covered anywhere in the knowledge base below.',
+          '',
+          '## Step 2 — Reply (only if Step 1 did not apply)',
+          'Using ONLY the information in the knowledge base, write a professional, clear, and empathetic reply.',
+          `Address the customer by their first name (${customerFirstName}).`,
+          'End with this exact signature on its own line: "Code with Mosh Support"',
+          'Use plain text only. Do not invent information not present in the knowledge base.',
+          '',
+          '## Knowledge base',
+          knowledgeBase,
         ].join('\n'),
         prompt: `Ticket subject: ${subject}\n\nCustomer message:\n${body}`,
       })).text
     } catch (err) {
       console.error(`[auto-resolve] AI error for ticket ${ticketId} — escalating:`, err)
-      await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'open' } })
+      await escalateTicket(ticketId)
       return
     }
 
@@ -135,7 +154,7 @@ export async function startQueue(): Promise<void> {
 
     if (response.toUpperCase().startsWith('ESCALATE')) {
       console.log(`[auto-resolve] Ticket ${ticketId} → escalated to human`)
-      await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'open' } })
+      await escalateTicket(ticketId)
       return
     }
 

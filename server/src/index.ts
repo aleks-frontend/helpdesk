@@ -10,6 +10,7 @@ import { usersRouter } from './routes/users.js'
 import { webhookRouter } from './routes/webhook.js'
 import { ticketsRouter } from './routes/tickets.js'
 import { repliesRouter } from './routes/replies.js'
+import { dashboardRouter } from './routes/dashboard.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -42,6 +43,7 @@ app.use('/api/users', usersRouter)
 app.use('/webhooks', webhookRouter)
 app.use('/api/tickets', ticketsRouter)
 app.use('/api/tickets/:ticketId/replies', repliesRouter)
+app.use('/api/dashboard', dashboardRouter)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err)

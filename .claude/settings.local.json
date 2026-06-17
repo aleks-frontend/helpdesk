@@ -68,7 +68,17 @@
       "Bash(API_SERVER_URL=http://localhost:3001 timeout 5 npx vite --port 5174)",
       "Bash(API_SERVER_URL=http://localhost:3001 node -e ' *)",
       "Bash(DATABASE_URL=postgresql://postgres:160598710Ag@localhost:5432/helpdesk_test?schema=public ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=password123 npx tsx prisma/seed.ts)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(timeout 40 bash -c 'until curl -sf http://localhost:5174 >/dev/null 2>&1 || curl -sf http://localhost:5173 >/dev/null 2>&1; do sleep 1; done')",
+      "Bash(pkill -f \"npm run dev --workspace=client\")",
+      "Bash(pkill -f \"npm run dev --workspace=server\")",
+      "Bash(pkill -f \"npx tsx src/index.ts\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(d.get\\('dependencies',{}\\).keys\\(\\)\\)\\)\")",
+      "Bash(curl -sf http://localhost:5173)",
+      "Bash(curl -sf http://localhost:3000/api/health)",
+      "Bash(break)",
+      "Bash(lsof -ti:5174)",
+      "Bash(pkill -f \"tsx\\\\|vite\\\\|concurrently\")"
     ]
   }
 }
