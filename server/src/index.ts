@@ -1,4 +1,6 @@
 import 'dotenv/config'
+import './instrument.js'
+import * as Sentry from '@sentry/node'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import { rateLimit } from 'express-rate-limit'
@@ -11,6 +13,7 @@ import { webhookRouter } from './routes/webhook.js'
 import { ticketsRouter } from './routes/tickets.js'
 import { repliesRouter } from './routes/replies.js'
 import { dashboardRouter } from './routes/dashboard.js'
+import { sentryTunnelRouter } from './routes/sentry-tunnel.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -44,6 +47,10 @@ app.use('/webhooks', webhookRouter)
 app.use('/api/tickets', ticketsRouter)
 app.use('/api/tickets/:ticketId/replies', repliesRouter)
 app.use('/api/dashboard', dashboardRouter)
+app.use('/api/sentry-tunnel', sentryTunnelRouter)
+
+// Sentry error handler must come before any other error middleware
+Sentry.setupExpressErrorHandler(app)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err)
