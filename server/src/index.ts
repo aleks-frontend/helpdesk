@@ -3,6 +3,7 @@ import './instrument.js'
 import * as Sentry from '@sentry/node'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
+import path from 'node:path'
 import { rateLimit } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth.js'
@@ -48,6 +49,15 @@ app.use('/api/tickets', ticketsRouter)
 app.use('/api/tickets/:ticketId/replies', repliesRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/sentry-tunnel', sentryTunnelRouter)
+
+// In production, serve the built Vite SPA and fall back to index.html for client-side routing
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(process.cwd(), 'client', 'dist')
+  app.use(express.static(clientDist))
+  app.get('/{*any}', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'))
+  })
+}
 
 // Sentry error handler must come before any other error middleware
 Sentry.setupExpressErrorHandler(app)

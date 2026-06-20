@@ -80,7 +80,15 @@
       "Bash(lsof -ti:5174)",
       "Bash(pkill -f \"tsx\\\\|vite\\\\|concurrently\")",
       "Skill(run)",
-      "Bash(pkill -f \"tsx --watch\")"
+      "Bash(pkill -f \"tsx --watch\")",
+      "Bash(docker build *)",
+      "Read(//Applications/Docker.app/**)",
+      "Read(//Users/aleksandargojkovic/.docker/**)",
+      "Bash(open -a Docker)",
+      "Bash(docker info *)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(/Applications/Docker.app/Contents/Resources/bin/docker build *)"
     ]
   }
 }
