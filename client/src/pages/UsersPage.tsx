@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { PlusIcon } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Role } from 'core'
 import { UserDialog } from '@/components/UserDialog'
@@ -38,16 +38,17 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold tracking-tight">Users</h1>
+        <Button size="sm" onClick={openCreate}>
+          <PlusIcon />
+          Create user
+        </Button>
+      </div>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Users</CardTitle>
-          <Button size="sm" onClick={openCreate}>
-            <PlusIcon />
-            Create user
-          </Button>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <UsersTable
             users={users}
             isLoading={isLoading}

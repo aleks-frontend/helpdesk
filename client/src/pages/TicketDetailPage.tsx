@@ -35,7 +35,7 @@ export default function TicketDetailPage() {
   if (!ticket) return null
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-4">
+    <div className="p-8 max-w-5xl mx-auto space-y-5">
       <BackLink to="/tickets">Back to tickets</BackLink>
 
       <div className="grid grid-cols-[1fr_260px] gap-6 items-start">

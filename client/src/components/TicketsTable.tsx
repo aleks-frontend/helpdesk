@@ -13,6 +13,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TicketStatus, TicketCategory } from 'core'
+import { cn } from '@/lib/utils'
 
 interface Ticket {
   id: string
@@ -25,9 +26,15 @@ interface Ticket {
 }
 
 function statusVariant(status: TicketStatus) {
-  if (status === TicketStatus.open) return 'primary'
+  if (status === TicketStatus.open) return 'warning'
   if (status === TicketStatus.resolved) return 'success'
   return 'default'
+}
+
+function statusRowClass(status: TicketStatus) {
+  if (status === TicketStatus.open) return 'border-l-[3px] border-l-amber-400'
+  if (status === TicketStatus.resolved) return 'border-l-[3px] border-l-emerald-500'
+  return 'border-l-[3px] border-l-slate-200'
 }
 
 function categoryVariant(category: TicketCategory) {
@@ -51,7 +58,7 @@ const columns = [
     cell: (info) => (
       <Link
         to={`/tickets/${info.row.original.id}`}
-        className="font-medium link"
+        className="font-medium link pl-3 block"
       >
         {info.getValue()}
       </Link>
@@ -163,7 +170,7 @@ export function TicketsTable({ tickets, isLoading, error, sorting, onSortingChan
       </TableHeader>
       <TableBody>
         {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
+          <TableRow key={row.id} className={cn(statusRowClass(row.original.status))}>
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}

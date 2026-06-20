@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { type SortingState } from '@tanstack/react-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -105,10 +105,10 @@ export default function TicketsPage() {
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto space-y-6">
+      <h1 className="text-xl font-semibold tracking-tight">Tickets</h1>
       <Card>
         <CardHeader className="flex flex-col gap-3">
-          <CardTitle>Tickets</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder="Search..."
