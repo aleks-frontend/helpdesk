@@ -88,7 +88,9 @@
       "Bash(docker info *)",
       "Read(//usr/local/bin/**)",
       "Read(//opt/homebrew/bin/**)",
-      "Bash(/Applications/Docker.app/Contents/Resources/bin/docker build *)"
+      "Bash(/Applications/Docker.app/Contents/Resources/bin/docker build *)",
+      "Bash(npm info *)",
+      "Bash(npm show *)"
     ]
   }
 }

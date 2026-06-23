@@ -1,19 +1,32 @@
 import { Router } from 'express'
 import { timingSafeEqual } from 'crypto'
+import multer from 'multer'
+import Parse from '@sendgrid/inbound-mail-parser'
 import { prisma } from '../lib/prisma.js'
-import { validateBody } from '../lib/validate-body.js'
 import { sendClassifyJob } from '../lib/queue.js'
 import { getAiAgentId } from '../lib/ai-agent.js'
-import { inboundEmailSchema } from 'core'
 
 export const webhookRouter = Router()
 
-webhookRouter.post('/email', async (req, res) => {
+// SendGrid sends multipart/form-data — parse it in memory (no disk writes)
+const upload = multer({ storage: multer.memoryStorage() })
+
+/** Extracts email and display name from "Name <email@example.com>" or "email@example.com" */
+function parseFrom(from: string): { email: string; name: string | undefined } {
+  const match = from.match(/^(.*?)\s*<([^>]+)>$/)
+  if (match) {
+    const name = match[1]!.trim()
+    return { email: match[2]!.trim(), name: name || undefined }
+  }
+  return { email: from.trim(), name: undefined }
+}
+
+webhookRouter.post('/email', upload.any(), async (req, res) => {
   const secret = process.env.WEBHOOK_SECRET
   if (secret) {
-    const provided = req.headers['x-webhook-secret']
+    const provided = req.headers['x-webhook-secret'] || req.query.secret
     if (typeof provided !== 'string') {
-      res.status(401).json({ error: 'Missing X-Webhook-Secret header.' })
+      res.status(401).json({ error: 'Missing webhook secret.' })
       return
     }
     const a = Buffer.from(provided)
@@ -26,10 +39,30 @@ webhookRouter.post('/email', async (req, res) => {
     console.warn('[webhook] WEBHOOK_SECRET is not set — secret check skipped.')
   }
 
-  const data = validateBody(inboundEmailSchema, req.body, res)
-  if (!data) return
+  const parse = new Parse({ keys: ['from', 'subject', 'text', 'html'] }, req as never)
+  const fields = parse.keyValues() as {
+    from?: string
+    subject?: string
+    text?: string
+    html?: string
+  }
 
-  const { from, fromName, subject, body, bodyHtml } = data
+  const { from: rawFrom, subject, text, html } = fields
+
+  if (!rawFrom || !subject || !text) {
+    res.status(400).json({ error: 'Missing required fields: from, subject, text.' })
+    return
+  }
+
+  const { email: from, name: fromName } = parseFrom(rawFrom)
+
+  if (!from) {
+    res.status(400).json({ error: 'Could not parse sender email.' })
+    return
+  }
+
+  const body = text
+  const bodyHtml = html || undefined
 
   const normalizedSubject = subject.replace(/^(re|fwd?):\s*/i, '').trim()
 
