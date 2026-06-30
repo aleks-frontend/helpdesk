@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js'
 import { validateBody } from '../lib/validate-body.js'
 import { parseUUID } from '../lib/parse-uuid.js'
 import { createReplySchema, polishReplySchema } from 'core'
+import { sendEmailJob } from '../lib/queue.js'
 
 export const repliesRouter = Router({ mergeParams: true })
 
@@ -79,6 +80,14 @@ repliesRouter.post('/', requireAuth, async (req, res) => {
     data: { ticketId, body: data.body, bodyHtml: data.bodyHtml, senderType: 'agent', userId: req.user!.id },
     include: { user: { select: { id: true, name: true } } },
   })
+
+  sendEmailJob({
+    to: ticket.senderEmail,
+    toName: ticket.senderName,
+    subject: ticket.subject,
+    body: data.body,
+    bodyHtml: data.bodyHtml,
+  }).catch((err) => console.error('[email] Failed to enqueue reply email for ticket', ticketId, err))
 
   res.status(201).json(reply)
 })

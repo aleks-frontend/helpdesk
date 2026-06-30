@@ -6,6 +6,22 @@ import { join, dirname } from 'node:path'
 import { prisma } from './prisma.js'
 import { boss } from './boss.js'
 import { TicketCategory } from 'core'
+import { sendReplyEmail } from './email.js'
+
+const SEND_EMAIL_QUEUE = 'send-reply-email'
+
+interface SendEmailJobData {
+  to: string
+  toName: string
+  subject: string
+  body: string
+  bodyHtml?: string | null
+}
+
+export async function sendEmailJob(data: SendEmailJobData): Promise<void> {
+  const id = await boss.send(SEND_EMAIL_QUEUE, data)
+  console.log(`[email] Job enqueued for ${data.to}, id=${id}`)
+}
 
 interface ClassifyJobData {
   ticketId: string
@@ -104,6 +120,23 @@ export async function startQueue(): Promise<void> {
     retryBackoff: true,
   })
 
+  await boss.createQueue(SEND_EMAIL_QUEUE, {
+    retryLimit: 3,
+    retryDelay: 60,
+    retryBackoff: true,
+  })
+
+  await boss.work<SendEmailJobData>(SEND_EMAIL_QUEUE, async (jobs) => {
+    const { to, toName, subject, body, bodyHtml } = jobs[0]!.data
+    try {
+      await sendReplyEmail({ to, toName, subject, body, bodyHtml })
+      console.log(`[email] Sent reply email to ${to}`)
+    } catch (err) {
+      console.error('[email] SendGrid error:', err)
+      throw err
+    }
+  })
+
   await boss.work<AutoResolveJobData>(AUTO_RESOLVE_QUEUE, async (jobs) => {
     const { ticketId, subject, body, senderName } = jobs[0]!.data
     const customerFirstName = senderName.split(' ')[0] || senderName
@@ -158,6 +191,11 @@ export async function startQueue(): Promise<void> {
       return
     }
 
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      select: { senderEmail: true },
+    })
+
     await prisma.$transaction([
       prisma.reply.create({
         data: { body: response, bodyHtml: null, senderType: 'ai', ticketId, userId: null },
@@ -166,6 +204,15 @@ export async function startQueue(): Promise<void> {
     ])
 
     console.log(`[auto-resolve] Ticket ${ticketId} → resolved by AI`)
+
+    if (ticket) {
+      sendEmailJob({
+        to: ticket.senderEmail,
+        toName: senderName,
+        subject,
+        body: response,
+      }).catch((err) => console.error('[email] Failed to enqueue reply email for ticket', ticketId, err))
+    }
   })
 }
 
